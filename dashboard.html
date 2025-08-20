@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" width=device-width, initial-scale=1.0">
-    <title>AR Explorer - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Cup Card Collector</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
@@ -26,7 +26,7 @@
             height: 100vh;
         }
 
-        /* Base layers - lowest z-index */
+        /* Base layers */
         #video {
             position: absolute;
             top: 0;
@@ -58,7 +58,7 @@
             z-index: 1;
         }
 
-        /* Header - highest priority UI */
+        /* Header */
         .header {
             position: fixed;
             top: 0;
@@ -74,7 +74,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 100%;
         }
 
         .app-info {
@@ -86,15 +85,14 @@
         .app-logo-small {
             width: 35px;
             height: 35px;
-            background: linear-gradient(135deg, #4CAF50, #2196F3);
-            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 16px;
             color: white;
             font-weight: bold;
-            flex-shrink: 0;
         }
 
         .app-title-small {
@@ -106,13 +104,33 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+        }
+
+        .collection-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 107, 53, 0.2);
+            padding: 4px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .collection-stats .card-icon {
+            font-size: 14px;
+        }
+
+        .collection-count {
+            color: #FF6B35;
+            font-weight: 600;
+            font-size: 12px;
         }
 
         .user-email {
             color: rgba(255, 255, 255, 0.8);
             font-size: 12px;
-            max-width: 120px;
+            max-width: 100px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -127,12 +145,6 @@
             font-size: 11px;
             cursor: pointer;
             transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            flex-shrink: 0;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
         }
 
         /* Status Panel */
@@ -144,7 +156,7 @@
             z-index: 90;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 107, 53, 0.3);
             border-radius: 12px;
             padding: 12px;
             color: white;
@@ -173,11 +185,7 @@
         .status-value {
             font-size: 12px;
             font-weight: 600;
-            color: #4CAF50;
-        }
-
-        .error {
-            color: #f44336 !important;
+            color: #FF6B35;
         }
 
         /* Mode Indicator */
@@ -200,8 +208,8 @@
         }
 
         .ar-mode {
-            background: rgba(76, 175, 80, 0.9) !important;
-            border-color: rgba(76, 175, 80, 0.5) !important;
+            background: rgba(255, 107, 53, 0.9) !important;
+            border-color: rgba(255, 107, 53, 0.5) !important;
         }
 
         .map-mode {
@@ -209,8 +217,13 @@
             border-color: rgba(33, 150, 243, 0.5) !important;
         }
 
-        /* POI Info */
-        .poi-info {
+        .album-mode {
+            background: rgba(156, 39, 176, 0.9) !important;
+            border-color: rgba(156, 39, 176, 0.5) !important;
+        }
+
+        /* Card Discovery */
+        .card-discovery {
             position: fixed;
             bottom: 80px;
             left: 15px;
@@ -218,83 +231,286 @@
             z-index: 85;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            border-radius: 12px;
-            padding: 15px;
+            border: 2px solid rgba(255, 107, 53, 0.5);
+            border-radius: 15px;
+            padding: 20px;
             color: white;
             display: none;
             transform: translateY(20px);
             transition: all 0.3s ease;
         }
 
-        .poi-info.show {
+        .card-discovery.show {
             display: block;
             transform: translateY(0);
+            animation: cardAppear 0.5s ease;
         }
 
-        .poi-header {
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .card-found-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #FF6B35;
+            margin-bottom: 5px;
+        }
+
+        .card-rarity {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .card-preview {
             display: flex;
+            gap: 15px;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
         }
 
-        .poi-icon {
-            width: 30px;
-            height: 30px;
-            background: linear-gradient(135deg, #4CAF50, #2196F3);
+        .card-image {
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #FFD700;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-flag {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 16px;
+        }
+
+        .card-player-photo {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
+            font-size: 20px;
+            margin-bottom: 5px;
         }
 
-        .poi-title {
+        .card-rating {
+            background: rgba(0, 0, 0, 0.7);
+            color: #FFD700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .card-details {
+            flex: 1;
+        }
+
+        .card-player-name {
             font-size: 16px;
             font-weight: 600;
-            flex: 1;
+            margin-bottom: 3px;
         }
 
-        .poi-distance {
-            background: rgba(76, 175, 80, 0.2);
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 10px;
-            color: #4CAF50;
-            flex-shrink: 0;
-        }
-
-        .poi-description {
+        .card-team {
             color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 10px;
-            line-height: 1.4;
             font-size: 13px;
+            margin-bottom: 3px;
         }
 
-        .poi-actions {
+        .card-position {
+            background: rgba(255, 107, 53, 0.3);
+            color: #FF6B35;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 10px;
+            display: inline-block;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-action-btn {
+            flex: 1;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .card-action-btn.secondary {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Album View */
+        .album-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 95;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: none;
+            overflow-y: auto;
+            padding: 80px 15px 80px 15px;
+        }
+
+        .album-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .album-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .album-progress {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: inline-block;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .album-progress-text {
+            color: #FF6B35;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .album-filters {
             display: flex;
             gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
-        .poi-action-btn {
-            flex: 1;
-            background: rgba(76, 175, 80, 0.2);
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            color: #4CAF50;
-            padding: 8px;
-            border-radius: 6px;
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 15px;
             font-size: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .poi-action-btn:hover {
-            background: rgba(76, 175, 80, 0.3);
+        .filter-btn.active {
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            border-color: #FF6B35;
         }
 
-        /* Controls - bottom layer */
+        .album-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .album-card-slot {
+            aspect-ratio: 3/4;
+            border-radius: 8px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .album-card-slot.collected {
+            border: 2px solid #FFD700;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .album-card-slot.collected:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .card-slot-content {
+            text-align: center;
+            color: white;
+        }
+
+        .card-slot-number {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .card-slot-icon {
+            font-size: 24px;
+            opacity: 0.5;
+        }
+
+        .collected .card-slot-icon {
+            opacity: 1;
+        }
+
+        .card-mini-flag {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            font-size: 12px;
+        }
+
+        .card-mini-rating {
+            position: absolute;
+            bottom: 3px;
+            left: 3px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #FFD700;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        /* Controls */
         .controls {
             position: fixed;
             bottom: 15px;
@@ -302,7 +518,7 @@
             right: 15px;
             z-index: 80;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .control-btn {
@@ -311,8 +527,8 @@
             backdrop-filter: blur(15px);
             color: white;
             border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 14px;
-            font-size: 14px;
+            padding: 12px;
+            font-size: 13px;
             font-weight: 600;
             border-radius: 12px;
             cursor: pointer;
@@ -320,7 +536,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .control-btn:hover {
@@ -329,8 +545,8 @@
         }
 
         .control-btn.active {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            border-color: #4CAF50;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            border-color: #FF6B35;
         }
 
         .control-btn:disabled {
@@ -342,59 +558,17 @@
         }
 
         .control-icon {
-            font-size: 16px;
+            font-size: 14px;
         }
 
-        /* Logo Container - middle layer */
-        .logo-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 70;
-            display: none;
-            text-align: center;
-            color: white;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(20px);
-            padding: 25px;
-            border-radius: 15px;
-            border: 2px solid rgba(76, 175, 80, 0.3);
-        }
-
-        .client-logo {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #4CAF50, #2196F3);
-            border-radius: 50%;
-            margin: 0 auto 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: white;
-            font-weight: bold;
-        }
-
-        .logo-text {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .logo-subtext {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        /* Start Button - top layer */
+        /* Start Button */
         .start-button {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 110;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
             color: white;
             border: none;
             padding: 18px 35px;
@@ -402,16 +576,16 @@
             font-weight: 600;
             border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
             transition: all 0.3s ease;
         }
 
         .start-button:hover {
             transform: translate(-50%, -50%) translateY(-2px);
-            box-shadow: 0 12px 35px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 12px 35px rgba(255, 107, 53, 0.4);
         }
 
-        /* Loading Overlay - highest layer */
+        /* Loading */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -433,7 +607,7 @@
             height: 30px;
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            border-top-color: #4CAF50;
+            border-top-color: #FF6B35;
             animation: spin 1s ease-in-out infinite;
             margin-right: 12px;
         }
@@ -442,164 +616,154 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Responsive adjustments */
+        /* Responsive */
         @media (max-width: 480px) {
-            .header {
-                padding: 8px 12px 15px 12px;
-            }
-            
-            .app-title-small {
-                font-size: 14px;
-            }
-            
-            .status-panel {
-                top: 50px;
-                left: 12px;
-                right: 12px;
-                padding: 10px;
+            .album-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 10px;
             }
             
             .controls {
-                left: 12px;
-                right: 12px;
-                gap: 8px;
+                gap: 6px;
             }
             
             .control-btn {
-                padding: 12px;
-                font-size: 13px;
+                padding: 10px;
+                font-size: 12px;
             }
-
-            .poi-info {
-                left: 12px;
-                right: 12px;
-                bottom: 70px;
-                padding: 12px;
-            }
-
-            .mode-indicator {
-                top: 120px;
-                right: 12px;
-            }
-        }
-
-        /* Fix for overlapping content */
-        .ui-safe-area {
-            pointer-events: none;
-        }
-        
-        .ui-safe-area > * {
-            pointer-events: auto;
-        }
-
-        /* Ensure buttons are clickable */
-        button, .control-btn, .logout-btn, .poi-action-btn {
-            pointer-events: auto !important;
-            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
 <body>
     <div id="container">
-        <!-- Loading Overlay - Highest Z-Index -->
+        <!-- Loading Overlay -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="loading-spinner"></div>
-            <span>Initializing AR Experience...</span>
+            <span>Loading World Cup Cards...</span>
         </div>
 
-        <!-- Start Button - High Z-Index -->
-        <button id="startBtn" class="start-button">🚀 Start AR Experience</button>
+        <!-- Start Button -->
+        <button id="startBtn" class="start-button">⚽ Start Card Hunt</button>
         
-        <!-- Base Content Layers -->
+        <!-- Base Content -->
         <div id="map"></div>
         <video id="video" autoplay muted playsinline></video>
         <canvas id="canvas"></canvas>
         
-        <!-- UI Safe Area Container -->
-        <div class="ui-safe-area">
-            <!-- Header - Highest UI Priority -->
-            <div class="header">
-                <div class="header-content">
-                    <div class="app-info">
-                        <div class="app-logo-small">AR</div>
-                        <div class="app-title-small">AR Explorer</div>
-                    </div>
-                    <div class="user-info">
-                        <span class="user-email" id="userEmail">user@example.com</span>
-                        <button class="logout-btn" id="logoutBtn">Logout</button>
-                    </div>
+        <!-- Album View -->
+        <div class="album-view" id="albumView">
+            <div class="album-header">
+                <div class="album-title">🏆 World Cup Collection</div>
+                <div class="album-progress">
+                    <div class="album-progress-text" id="albumProgress">0 / 32 Cards Collected</div>
                 </div>
             </div>
             
-            <!-- Status Panel -->
-            <div class="status-panel" id="statusPanel">
-                <div class="status-grid">
-                    <div class="status-item">
-                        <div class="status-label">Status</div>
-                        <div class="status-value" id="status">Loading GPS...</div>
-                    </div>
-                    <div class="status-item">
-                        <div class="status-label">POIs Found</div>
-                        <div class="status-value" id="poiCount">0</div>
-                    </div>
-                    <div class="status-item">
-                        <div class="status-label">Location</div>
-                        <div class="status-value">
-                            <span id="lat">--</span>, <span id="lng">--</span>
-                        </div>
-                    </div>
-                    <div class="status-item">
-                        <div class="status-label">Heading</div>
-                        <div class="status-value"><span id="heading">--</span>°</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mode Indicator -->
-            <div class="mode-indicator map-mode" id="modeIndicator">
-                <span class="control-icon">🗺️</span>
-                <span>MAP</span>
+            <div class="album-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="common">Common</button>
+                <button class="filter-btn" data-filter="rare">Rare</button>
+                <button class="filter-btn" data-filter="legendary">Legendary</button>
             </div>
             
-            <!-- POI Info -->
-            <div id="poiInfo" class="poi-info">
-                <div class="poi-header">
-                    <div class="poi-icon" id="poiIcon">📍</div>
-                    <div class="poi-title" id="poiName"></div>
-                    <div class="poi-distance"><span id="poiDistance"></span>m</div>
+            <div class="album-grid" id="albumGrid">
+                <!-- Cards will be generated here -->
+            </div>
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="app-info">
+                    <div class="app-logo-small">⚽</div>
+                    <div class="app-title-small">Card Collector</div>
                 </div>
-                <div class="poi-description" id="poiDescription"></div>
-                <div class="poi-actions">
-                    <button class="poi-action-btn">📱 Navigate</button>
-                    <button class="poi-action-btn">ℹ️ Info</button>
+                <div class="user-info">
+                    <div class="collection-stats">
+                        <span class="card-icon">🃏</span>
+                        <span class="collection-count" id="collectionCount">0/32</span>
+                    </div>
+                    <span class="user-email" id="userEmail">user@example.com</span>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
                 </div>
             </div>
-
-            <!-- Controls -->
-            <div class="controls">
-                <button id="mapBtn" class="control-btn active">
-                    <span class="control-icon">🗺️</span>
-                    <span>Map</span>
-                </button>
-                <button id="arBtn" class="control-btn" disabled>
-                    <span class="control-icon">📱</span>
-                    <span>AR</span>
-                </button>
+        </div>
+        
+        <!-- Status Panel -->
+        <div class="status-panel" id="statusPanel">
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Status</div>
+                    <div class="status-value" id="status">Loading GPS...</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Cards Found</div>
+                    <div class="status-value" id="cardsFound">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Location</div>
+                    <div class="status-value">
+                        <span id="lat">--</span>, <span id="lng">--</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Heading</div>
+                    <div class="status-value"><span id="heading">--</span>°</div>
+                </div>
             </div>
         </div>
 
-        <!-- Logo Container - Medium Z-Index -->
-        <div class="logo-container" id="logoContainer">
-            <div class="client-logo" id="clientLogo">AR</div>
-            <div class="logo-text">AR Mode Active</div>
-            <div class="logo-subtext">Look around to explore</div>
+        <!-- Mode Indicator -->
+        <div class="mode-indicator map-mode" id="modeIndicator">
+            <span class="control-icon">🗺️</span>
+            <span>MAP</span>
+        </div>
+        
+        <!-- Card Discovery -->
+        <div id="cardDiscovery" class="card-discovery">
+            <div class="card-header">
+                <div class="card-found-title">⚽ Player Card Found!</div>
+                <div class="card-rarity" id="cardRarity">RARE</div>
+            </div>
+            <div class="card-preview">
+                <div class="card-image">
+                    <div class="card-flag" id="cardFlag">🇧🇷</div>
+                    <div class="card-player-photo" id="cardPhoto">⚽</div>
+                    <div class="card-rating" id="cardRating">94</div>
+                </div>
+                <div class="card-details">
+                    <div class="card-player-name" id="cardPlayerName">Pelé</div>
+                    <div class="card-team" id="cardTeam">Brazil National Team</div>
+                    <div class="card-position" id="cardPosition">Forward</div>
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="card-action-btn" id="collectCardBtn">🃏 Collect Card</button>
+                <button class="card-action-btn secondary" id="skipCardBtn">Skip</button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button id="mapBtn" class="control-btn active">
+                <span class="control-icon">🗺️</span>
+                <span>Map</span>
+            </button>
+            <button id="arBtn" class="control-btn" disabled>
+                <span class="control-icon">📱</span>
+                <span>AR Hunt</span>
+            </button>
+            <button id="albumBtn" class="control-btn">
+                <span class="control-icon">🃏</span>
+                <span>Album</span>
+            </button>
         </div>
     </div>
 
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
 
     <script>
-        class ARDashboard {
+        class WorldCupCardCollector {
             constructor() {
                 this.userLat = null;
                 this.userLng = null;
@@ -607,23 +771,51 @@
                 this.scene = null;
                 this.camera = null;
                 this.renderer = null;
-                this.pois = [];
-                this.poiObjects = [];
+                this.cardLocations = [];
+                this.cardObjects = [];
                 this.mapMarkers = [];
                 this.isStarted = false;
-                this.isARMode = false;
+                this.currentMode = 'map'; // map, ar, album
                 this.map = null;
                 this.userMarker = null;
                 this.animationStarted = false;
-                this.currentPOI = null;
+                this.collectedCards = new Set();
+                this.totalCards = 32;
 
-                this.samplePOIs = [
-                    { name: "Coffee Shop", description: "Great coffee and pastries nearby!", type: "food", color: 0x8B4513, icon: "☕" },
-                    { name: "Central Park", description: "Beautiful green space for relaxation.", type: "nature", color: 0x228B22, icon: "🌳" },
-                    { name: "History Museum", description: "Local history and cultural exhibits.", type: "culture", color: 0x4169E1, icon: "🏛️" },
-                    { name: "Italian Restaurant", description: "Authentic Italian cuisine.", type: "food", color: 0xFF6347, icon: "🍽️" },
-                    { name: "Tech Store", description: "Latest gadgets and electronics.", type: "shopping", color: 0xFF1493, icon: "🏪" },
-                    { name: "Gym", description: "Fitness center with modern equipment.", type: "health", color: 0xFF8C00, icon: "💪" },
+                // World Cup player cards data
+                this.worldCupCards = [
+                    { id: 1, name: "Lionel Messi", team: "Argentina", position: "RW", rating: 95, flag: "🇦🇷", rarity: "legendary", photo: "👑" },
+                    { id: 2, name: "Kylian Mbappé", team: "France", position: "ST", rating: 94, flag: "🇫🇷", rarity: "legendary", photo: "⚡" },
+                    { id: 3, name: "Neymar Jr.", team: "Brazil", position: "LW", rating: 93, flag: "🇧🇷", rarity: "rare", photo: "⭐" },
+                    { id: 4, name: "Kevin De Bruyne", team: "Belgium", position: "CM", rating: 92, flag: "🇧🇪", rarity: "rare", photo: "🎯" },
+                    { id: 5, name: "Virgil van Dijk", team: "Netherlands", position: "CB", rating: 91, flag: "🇳🇱", rarity: "rare", photo: "🛡️" },
+                    { id: 6, name: "Mohamed Salah", team: "Egypt", position: "RW", rating: 90, flag: "🇪🇬", rarity: "rare", photo: "💫" },
+                    { id: 7, name: "Robert Lewandowski", team: "Poland", position: "ST", rating: 90, flag: "🇵🇱", rarity: "rare", photo: "🎯" },
+                    { id: 8, name: "Luka Modrić", team: "Croatia", position: "CM", rating: 89, flag: "🇭🇷", rarity: "rare", photo: "⚡" },
+                    { id: 9, name: "Harry Kane", team: "England", position: "ST", rating: 89, flag: "🏴󐁧󐁢󐁥󐁮󐁧󐁿", rarity: "common", photo: "⚽" },
+                    { id: 10, name: "Sadio Mané", team: "Senegal", position: "LW", rating: 88, flag: "🇸🇳", rarity: "common", photo: "🌟" },
+                    { id: 11, name: "Bruno Fernandes", team: "Portugal", position: "CAM", rating: 88, flag: "🇵🇹", rarity: "common", photo: "🎭" },
+                    { id: 12, name: "Son Heung-min", team: "South Korea", position: "LW", rating: 87, flag: "🇰🇷", rarity: "common", photo: "⚽" },
+                    { id: 13, name: "Manuel Neuer", team: "Germany", position: "GK", rating: 89, flag: "🇩🇪", rarity: "rare", photo: "🥅" },
+                    { id: 14, name: "Casemiro", team: "Brazil", position: "CDM", rating: 87, flag: "🇧🇷", rarity: "common", photo: "⚔️" },
+                    { id: 15, name: "Pedri", team: "Spain", position: "CM", rating: 86, flag: "🇪🇸", rarity: "common", photo: "💎" },
+                    { id: 16, name: "Jamal Musiala", team: "Germany", position: "CAM", rating: 85, flag: "🇩🇪", rarity: "common", photo: "🌟" },
+                    { id: 17, name: "Alphonso Davies", team: "Canada", position: "LB", rating: 85, flag: "🇨🇦", rarity: "common", photo: "💨" },
+                    { id: 18, name: "Achraf Hakimi", team: "Morocco", position: "RB", rating: 85, flag: "🇲🇦", rarity: "common", photo: "🚀" },
+                    { id: 19, name: "Declan Rice", team: "England", position: "CDM", rating: 84, flag: "🏴󐁧󐁢󐁥󐁮󐁧󐁿", rarity: "common", photo: "⚽" },
+                    { id: 20, name: "Rafael Leão", team: "Portugal", position: "LW", rating: 84, flag: "🇵🇹", rarity: "common", photo: "🔥" },
+                    { id: 21, name: "Gavi", team: "Spain", position: "CM", rating: 83, flag: "🇪🇸", rarity: "common", photo: "⭐" },
+                    { id: 22, name: "Yunus Musah", team: "USA", position: "CM", rating: 82, flag: "🇺🇸", rarity: "common", photo: "🌟" },
+                    { id: 23, name: "Tyler Adams", team: "USA", position: "CDM", rating: 81, flag: "🇺🇸", rarity: "common", photo: "🛡️" },
+                    { id: 24, name: "Christian Pulisic", team: "USA", position: "LW", rating: 82, flag: "🇺🇸", rarity: "common", photo: "💫" },
+                    { id: 25, name: "Folarin Balogun", team: "USA", position: "ST", rating: 80, flag: "🇺🇸", rarity: "common", photo: "⚽" },
+                    { id: 26, name: "Sergiño Dest", team: "USA", position: "RB", rating: 79, flag: "🇺🇸", rarity: "common", photo: "🚀" },
+                    { id: 27, name: "Matt Turner", team: "USA", position: "GK", rating: 78, flag: "🇺🇸", rarity: "common", photo: "🥅" },
+                    { id: 28, name: "Antonee Robinson", team: "USA", position: "LB", rating: 78, flag: "🇺🇸", rarity: "common", photo: "💨" },
+                    { id: 29, name: "Luca de la Torre", team: "USA", position: "CM", rating: 77, flag: "🇺🇸", rarity: "common", photo: "⚽" },
+                    { id: 30, name: "Ricardo Pepi", team: "USA", position: "ST", rating: 76, flag: "🇺🇸", rarity: "common", photo: "🌟" },
+                    { id: 31, name: "Malik Tillman", team: "USA", position: "CAM", rating: 75, flag: "🇺🇸", rarity: "common", photo: "💎" },
+                    { id: 32, name: "Joe Scally", team: "USA", position: "RB", rating: 74, flag: "🇺🇸", rarity: "common", photo: "🛡️" }
                 ];
 
                 this.init();
@@ -633,10 +825,11 @@
                 try {
                     this.checkSession();
                     this.loadUserInfo();
+                    this.loadCollectedCards();
                     this.setupEventListeners();
+                    this.initializeAlbum();
                 } catch (error) {
                     console.error('Initialization error:', error);
-                    this.updateStatus(`Init Error: ${error.message}`, true);
                 }
             }
 
@@ -677,20 +870,90 @@
                 }
             }
 
+            loadCollectedCards() {
+                const saved = localStorage.getItem('collectedWorldCupCards');
+                if (saved) {
+                    this.collectedCards = new Set(JSON.parse(saved));
+                }
+                this.updateCollectionStats();
+            }
+
+            saveCollectedCards() {
+                localStorage.setItem('collectedWorldCupCards', JSON.stringify([...this.collectedCards]));
+                this.updateCollectionStats();
+            }
+
+            updateCollectionStats() {
+                const count = this.collectedCards.size;
+                document.getElementById('collectionCount').textContent = `${count}/${this.totalCards}`;
+                document.getElementById('albumProgress').textContent = `${count} / ${this.totalCards} Cards Collected`;
+                document.getElementById('cardsFound').textContent = count;
+            }
+
             setupEventListeners() {
                 try {
-                    const startBtn = document.getElementById('startBtn');
-                    const mapBtn = document.getElementById('mapBtn');
-                    const arBtn = document.getElementById('arBtn');
-                    const logoutBtn = document.getElementById('logoutBtn');
+                    document.getElementById('startBtn')?.addEventListener('click', () => this.start());
+                    document.getElementById('mapBtn')?.addEventListener('click', () => this.switchToMap());
+                    document.getElementById('arBtn')?.addEventListener('click', () => this.switchToAR());
+                    document.getElementById('albumBtn')?.addEventListener('click', () => this.switchToAlbum());
+                    document.getElementById('logoutBtn')?.addEventListener('click', () => this.logout());
+                    document.getElementById('collectCardBtn')?.addEventListener('click', () => this.collectCard());
+                    document.getElementById('skipCardBtn')?.addEventListener('click', () => this.skipCard());
 
-                    if (startBtn) startBtn.addEventListener('click', () => this.start());
-                    if (mapBtn) mapBtn.addEventListener('click', () => this.switchToMap());
-                    if (arBtn) arBtn.addEventListener('click', () => this.switchToAR());
-                    if (logoutBtn) logoutBtn.addEventListener('click', () => this.logout());
+                    // Album filters
+                    document.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => this.filterAlbum(e.target.dataset.filter));
+                    });
                 } catch (error) {
                     console.error('Event listener error:', error);
                 }
+            }
+
+            initializeAlbum() {
+                const albumGrid = document.getElementById('albumGrid');
+                if (!albumGrid) return;
+
+                albumGrid.innerHTML = '';
+                
+                this.worldCupCards.forEach(card => {
+                    const slot = document.createElement('div');
+                    slot.className = `album-card-slot ${this.collectedCards.has(card.id) ? 'collected' : ''}`;
+                    slot.dataset.cardId = card.id;
+                    slot.dataset.rarity = card.rarity;
+                    
+                    if (this.collectedCards.has(card.id)) {
+                        slot.innerHTML = `
+                            <div class="card-slot-content">
+                                <div class="card-mini-flag">${card.flag}</div>
+                                <div class="card-mini-rating">${card.rating}</div>
+                                <div class="card-slot-icon">${card.photo}</div>
+                            </div>
+                        `;
+                    } else {
+                        slot.innerHTML = `
+                            <div class="card-slot-content">
+                                <div class="card-slot-number">#${card.id}</div>
+                                <div class="card-slot-icon">❓</div>
+                            </div>
+                        `;
+                    }
+                    
+                    albumGrid.appendChild(slot);
+                });
+            }
+
+            filterAlbum(filter) {
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+
+                const slots = document.querySelectorAll('.album-card-slot');
+                slots.forEach(slot => {
+                    if (filter === 'all' || slot.dataset.rarity === filter) {
+                        slot.style.display = 'flex';
+                    } else {
+                        slot.style.display = 'none';
+                    }
+                });
             }
 
             logout() {
@@ -709,9 +972,7 @@
                 if (this.isStarted) return;
                 this.isStarted = true;
 
-                const startBtn = document.getElementById('startBtn');
-                if (startBtn) startBtn.style.display = 'none';
-                
+                document.getElementById('startBtn').style.display = 'none';
                 this.showLoading(true);
                 
                 try {
@@ -720,12 +981,10 @@
                     await this.setupCamera();
                     this.setupThreeJS();
                     this.setupDeviceOrientation();
-                    this.generateNearbyPOIs();
+                    this.generateCardLocations();
                     
-                    const arBtn = document.getElementById('arBtn');
-                    if (arBtn) arBtn.disabled = false;
-                    
-                    this.updateStatus("✅ Ready! Switch between Map and AR views");
+                    document.getElementById('arBtn').disabled = false;
+                    this.updateStatus("✅ Ready! Start hunting for World Cup cards!");
                     this.showLoading(false);
                 } catch (error) {
                     console.error('Start error:', error);
@@ -734,169 +993,206 @@
                 }
             }
 
-            initializeMap() {
+            generateCardLocations() {
                 try {
-                    const mapElement = document.getElementById('map');
-                    if (!mapElement || typeof google === 'undefined') {
-                        console.warn('Google Maps not available');
-                        return;
+                    const radius = 0.003; // Larger radius for card hunting
+                    
+                    // Generate random locations for uncollected cards
+                    const uncollectedCards = this.worldCupCards.filter(card => !this.collectedCards.has(card.id));
+                    const locationsToGenerate = Math.min(6, uncollectedCards.length); // Show max 6 cards at once
+                    
+                    for (let i = 0; i < locationsToGenerate; i++) {
+                        const randomCard = uncollectedCards[Math.floor(Math.random() * uncollectedCards.length)];
+                        const angle = (i / locationsToGenerate) * Math.PI * 2;
+                        const distance = radius * (0.4 + Math.random() * 0.6);
+                        
+                        const cardLocation = {
+                            ...randomCard,
+                            lat: this.userLat + Math.cos(angle) * distance,
+                            lng: this.userLng + Math.sin(angle) * distance,
+                            discovered: false
+                        };
+                        
+                        this.cardLocations.push(cardLocation);
+                        this.createCardObject(cardLocation);
                     }
 
-                    const defaultLocation = { lat: 40.7589, lng: -73.9851 };
-                    const mapLocation = this.userLat ? { lat: this.userLat, lng: this.userLng } : defaultLocation;
-
-                    this.map = new google.maps.Map(mapElement, {
-                        zoom: 16,
-                        center: mapLocation,
-                        mapTypeId: 'roadmap',
-                        styles: [
-                            { featureType: 'poi', stylers: [{ visibility: 'off' }] }
-                        ]
-                    });
-
-                    this.userMarker = new google.maps.Marker({
-                        position: mapLocation,
-                        map: this.map,
-                        title: 'Your Location',
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 10,
-                            fillColor: '#4CAF50',
-                            fillOpacity: 1,
-                            strokeColor: '#fff',
-                            strokeWeight: 3
-                        }
-                    });
-
-                    if (this.userLat) {
-                        this.updateMapLocation();
-                    }
+                    this.addMapMarkers();
                 } catch (error) {
-                    console.error('Map initialization error:', error);
+                    console.error('Card generation error:', error);
                 }
             }
 
-            updateMapLocation() {
-                if (!this.map || !this.userLat) return;
-
+            createCardObject(card) {
                 try {
-                    const userLocation = { lat: this.userLat, lng: this.userLng };
-                    this.map.setCenter(userLocation);
-                    if (this.userMarker) {
-                        this.userMarker.setPosition(userLocation);
-                    }
+                    if (!this.scene) return;
+
+                    const group = new THREE.Group();
+                    
+                    // Create card-like object
+                    const geometry = new THREE.BoxGeometry(3, 4, 0.2);
+                    const material = new THREE.MeshLambertMaterial({ 
+                        color: card.rarity === 'legendary' ? 0xFFD700 : 
+                               card.rarity === 'rare' ? 0xFF6B35 : 0x4CAF50 
+                    });
+                    const cardMesh = new THREE.Mesh(geometry, material);
+                    cardMesh.position.y = 2;
+                    group.add(cardMesh);
+                    
+                    cardMesh.userData.originalY = cardMesh.position.y;
+                    cardMesh.userData.animationOffset = Math.random() * Math.PI * 2;
+                    
+                    // Base platform
+                    const baseGeometry = new THREE.CylinderGeometry(2, 2, 0.5, 8);
+                    const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+                    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                    group.add(base);
+                    
+                    this.updateCardPosition(group, card);
+                    
+                    group.userData.card = card;
+                    this.cardObjects.push(group);
+                    this.scene.add(group);
                 } catch (error) {
-                    console.error('Map update error:', error);
+                    console.error('Card object creation error:', error);
                 }
             }
 
-            addMapMarkers() {
-                if (!this.map) return;
-
+            updateCardPosition(object, card) {
                 try {
-                    // Clear existing markers
-                    this.mapMarkers.forEach(marker => marker.setMap(null));
-                    this.mapMarkers = [];
-
-                    this.pois.forEach(poi => {
-                        const marker = new google.maps.Marker({
-                            position: { lat: poi.lat, lng: poi.lng },
-                            map: this.map,
-                            title: poi.name,
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: 12,
-                                fillColor: `#${poi.color.toString(16).padStart(6, '0')}`,
-                                fillOpacity: 0.9,
-                                strokeColor: '#fff',
-                                strokeWeight: 2
-                            }
-                        });
-
-                        const infoWindow = new google.maps.InfoWindow({
-                            content: `
-                                <div style="padding: 10px; max-width: 200px;">
-                                    <h3 style="margin: 0 0 5px 0; color: #333;">${poi.icon} ${poi.name}</h3>
-                                    <p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">${poi.description}</p>
-                                    <small style="color: #999;">Distance: ${Math.round(poi.distance || 0)}m</small>
-                                </div>
-                            `
-                        });
-
-                        marker.addListener('click', () => {
-                            infoWindow.open(this.map, marker);
-                        });
-
-                        this.mapMarkers.push(marker);
-                    });
+                    const distance = this.calculateDistance(this.userLat, this.userLng, card.lat, card.lng);
+                    const bearing = this.calculateBearing(this.userLat, this.userLng, card.lat, card.lng);
+                    
+                    const scaledDistance = Math.min(distance * 6, 100);
+                    
+                    const x = Math.sin(bearing) * scaledDistance;
+                    const z = -Math.cos(bearing) * scaledDistance;
+                    
+                    object.position.set(x, 0, z);
+                    card.distance = distance;
                 } catch (error) {
-                    console.error('Map markers error:', error);
+                    console.error('Card position update error:', error);
                 }
             }
 
             switchToMap() {
-                this.isARMode = false;
+                this.currentMode = 'map';
                 
-                const map = document.getElementById('map');
-                const video = document.getElementById('video');
-                const canvas = document.getElementById('canvas');
-                const logoContainer = document.getElementById('logoContainer');
-                const poiInfo = document.getElementById('poiInfo');
-                const mapBtn = document.getElementById('mapBtn');
-                const arBtn = document.getElementById('arBtn');
+                document.getElementById('map').style.display = 'block';
+                document.getElementById('video').style.display = 'none';
+                document.getElementById('canvas').style.display = 'none';
+                document.getElementById('albumView').style.display = 'none';
+                document.getElementById('cardDiscovery').classList.remove('show');
+                
+                document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('mapBtn').classList.add('active');
+                
                 const indicator = document.getElementById('modeIndicator');
-
-                if (map) map.style.display = 'block';
-                if (video) video.style.display = 'none';
-                if (canvas) canvas.style.display = 'none';
-                if (logoContainer) logoContainer.style.display = 'none';
-                if (poiInfo) poiInfo.classList.remove('show');
-                
-                if (mapBtn) mapBtn.classList.add('active');
-                if (arBtn) arBtn.classList.remove('active');
-                
-                if (indicator) {
-                    indicator.innerHTML = '<span class="control-icon">🗺️</span><span>MAP</span>';
-                    indicator.className = 'mode-indicator map-mode';
-                }
-                
-                this.updateMapLocation();
+                indicator.innerHTML = '<span class="control-icon">🗺️</span><span>MAP</span>';
+                indicator.className = 'mode-indicator map-mode';
             }
 
             switchToAR() {
-                this.isARMode = true;
+                this.currentMode = 'ar';
                 
-                const map = document.getElementById('map');
-                const video = document.getElementById('video');
-                const canvas = document.getElementById('canvas');
-                const logoContainer = document.getElementById('logoContainer');
-                const mapBtn = document.getElementById('mapBtn');
-                const arBtn = document.getElementById('arBtn');
+                document.getElementById('map').style.display = 'none';
+                document.getElementById('video').style.display = 'block';
+                document.getElementById('canvas').style.display = 'block';
+                document.getElementById('albumView').style.display = 'none';
+                
+                document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('arBtn').classList.add('active');
+                
                 const indicator = document.getElementById('modeIndicator');
-
-                if (map) map.style.display = 'none';
-                if (video) video.style.display = 'block';
-                if (canvas) canvas.style.display = 'block';
-                if (logoContainer) logoContainer.style.display = 'block';
-                
-                if (mapBtn) mapBtn.classList.remove('active');
-                if (arBtn) arBtn.classList.add('active');
-                
-                if (indicator) {
-                    indicator.innerHTML = '<span class="control-icon">📱</span><span>AR</span>';
-                    indicator.className = 'mode-indicator ar-mode';
-                }
+                indicator.innerHTML = '<span class="control-icon">📱</span><span>AR HUNT</span>';
+                indicator.className = 'mode-indicator ar-mode';
                 
                 if (!this.animationStarted) {
                     this.animate();
                     this.animationStarted = true;
                 }
-                
-                // Hide logo after 2.5 seconds
-                setTimeout(() => {
-                    if (logoContainer) logoContainer.style.display = 'none';
-                }, 2500);
             }
+
+            switchToAlbum() {
+                this.currentMode = 'album';
+                
+                document.getElementById('map').style.display = 'none';
+                document.getElementById('video').style.display = 'none';
+                document.getElementById('canvas').style.display = 'none';
+                document.getElementById('albumView').style.display = 'block';
+                document.getElementById('cardDiscovery').classList.remove('show');
+                
+                document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('albumBtn').classList.add('active');
+                
+                const indicator = document.getElementById('modeIndicator');
+                indicator.innerHTML = '<span class="control-icon">🃏</span><span>ALBUM</span>';
+                indicator.className = 'mode-indicator album-mode';
+                
+                this.initializeAlbum(); // Refresh album display
+            }
+
+            showCardDiscovery(card) {
+                try {
+                    document.getElementById('cardRarity').textContent = card.rarity.toUpperCase();
+                    document.getElementById('cardFlag').textContent = card.flag;
+                    document.getElementById('cardPhoto').textContent = card.photo;
+                    document.getElementById('cardRating').textContent = card.rating;
+                    document.getElementById('cardPlayerName').textContent = card.name;
+                    document.getElementById('cardTeam').textContent = card.team;
+                    document.getElementById('cardPosition').textContent = card.position;
+                    
+                    this.currentDiscoveredCard = card;
+                    document.getElementById('cardDiscovery').classList.add('show');
+                } catch (error) {
+                    console.error('Show card discovery error:', error);
+                }
+            }
+
+            collectCard() {
+                if (this.currentDiscoveredCard) {
+                    this.collectedCards.add(this.currentDiscoveredCard.id);
+                    this.saveCollectedCards();
+                    
+                    // Remove from available locations
+                    this.cardLocations = this.cardLocations.filter(loc => loc.id !== this.currentDiscoveredCard.id);
+                    
+                    // Remove 3D object
+                    const objectIndex = this.cardObjects.findIndex(obj => obj.userData.card.id === this.currentDiscoveredCard.id);
+                    if (objectIndex >= 0) {
+                        this.scene.remove(this.cardObjects[objectIndex]);
+                        this.cardObjects.splice(objectIndex, 1);
+                    }
+                    
+                    document.getElementById('cardDiscovery').classList.remove('show');
+                    this.currentDiscoveredCard = null;
+                    
+                    // Generate new card location
+                    this.generateCardLocations();
+                }
+            }
+
+            skipCard() {
+                document.getElementById('cardDiscovery').classList.remove('show');
+                this.currentDiscoveredCard = null;
+            }
+
+            checkNearbyCards() {
+                if (this.currentMode !== 'ar') return;
+                
+                try {
+                    const nearbyCard = this.cardLocations.find(card => card.distance < 50 && !card.discovered);
+                    
+                    if (nearbyCard) {
+                        nearbyCard.discovered = true;
+                        this.showCardDiscovery(nearbyCard);
+                    }
+                } catch (error) {
+                    console.error('Card check error:', error);
+                }
+            }
+
+            // ... [Include all the other methods from the previous version: setupCamera, setupGPS, setupThreeJS, etc.] ...
 
             async setupCamera() {
                 try {
@@ -941,12 +1237,9 @@
                             this.userLat = position.coords.latitude;
                             this.userLng = position.coords.longitude;
                             
-                            const latEl = document.getElementById('lat');
-                            const lngEl = document.getElementById('lng');
-                            if (latEl) latEl.textContent = this.userLat.toFixed(4);
-                            if (lngEl) lngEl.textContent = this.userLng.toFixed(4);
+                            document.getElementById('lat').textContent = this.userLat.toFixed(4);
+                            document.getElementById('lng').textContent = this.userLng.toFixed(4);
                             
-                            // Watch position
                             navigator.geolocation.watchPosition(
                                 (pos) => this.updatePosition(pos),
                                 (error) => console.warn("GPS update error:", error),
@@ -984,7 +1277,6 @@
                     this.renderer.setSize(window.innerWidth, window.innerHeight);
                     this.renderer.setClearColor(0x000000, 0);
 
-                    // Lighting
                     const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
                     this.scene.add(ambientLight);
                     
@@ -1007,8 +1299,7 @@
                                 if (response == 'granted') {
                                     window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
                                 }
-                            })
-                            .catch(error => console.warn('Device orientation permission error:', error));
+                            });
                     } else {
                         window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
                     }
@@ -1017,78 +1308,92 @@
                 }
             }
 
-            generateNearbyPOIs() {
+            initializeMap() {
                 try {
-                    const radius = 0.002;
-                    
-                    this.samplePOIs.forEach((poiTemplate, index) => {
-                        const angle = (index / this.samplePOIs.length) * Math.PI * 2;
-                        const distance = radius * (0.3 + Math.random() * 0.7);
-                        
-                        const poi = {
-                            ...poiTemplate,
-                            lat: this.userLat + Math.cos(angle) * distance,
-                            lng: this.userLng + Math.sin(angle) * distance,
-                            id: index
-                        };
-                        
-                        this.pois.push(poi);
-                        this.createPOIObject(poi);
+                    const mapElement = document.getElementById('map');
+                    if (!mapElement || typeof google === 'undefined') {
+                        console.warn('Google Maps not available');
+                        return;
+                    }
+
+                    const defaultLocation = { lat: 40.7589, lng: -73.9851 };
+                    const mapLocation = this.userLat ? { lat: this.userLat, lng: this.userLng } : defaultLocation;
+
+                    this.map = new google.maps.Map(mapElement, {
+                        zoom: 16,
+                        center: mapLocation,
+                        mapTypeId: 'roadmap',
+                        styles: [
+                            { featureType: 'poi', stylers: [{ visibility: 'off' }] }
+                        ]
                     });
 
-                    const poiCountEl = document.getElementById('poiCount');
-                    if (poiCountEl) poiCountEl.textContent = this.pois.length;
-                    
-                    this.addMapMarkers();
+                    this.userMarker = new google.maps.Marker({
+                        position: mapLocation,
+                        map: this.map,
+                        title: 'Your Location',
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: '#FF6B35',
+                            fillOpacity: 1,
+                            strokeColor: '#fff',
+                            strokeWeight: 3
+                        }
+                    });
                 } catch (error) {
-                    console.error('POI generation error:', error);
+                    console.error('Map initialization error:', error);
                 }
             }
 
-            createPOIObject(poi) {
-                try {
-                    if (!this.scene) return;
+            addMapMarkers() {
+                if (!this.map) return;
 
-                    const group = new THREE.Group();
-                    
-                    const geometry = new THREE.CylinderGeometry(2, 2, 8, 8);
-                    const material = new THREE.MeshLambertMaterial({ color: poi.color });
-                    const marker = new THREE.Mesh(geometry, material);
-                    marker.position.y = 4;
-                    group.add(marker);
-                    
-                    marker.userData.originalY = marker.position.y;
-                    marker.userData.animationOffset = Math.random() * Math.PI * 2;
-                    
-                    const baseGeometry = new THREE.CylinderGeometry(3, 3, 1, 8);
-                    const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
-                    const base = new THREE.Mesh(baseGeometry, baseMaterial);
-                    group.add(base);
-                    
-                    this.updatePOIPosition(group, poi);
-                    
-                    group.userData.poi = poi;
-                    this.poiObjects.push(group);
-                    this.scene.add(group);
-                } catch (error) {
-                    console.error('POI object creation error:', error);
-                }
-            }
-
-            updatePOIPosition(object, poi) {
                 try {
-                    const distance = this.calculateDistance(this.userLat, this.userLng, poi.lat, poi.lng);
-                    const bearing = this.calculateBearing(this.userLat, this.userLng, poi.lat, poi.lng);
-                    
-                    const scaledDistance = Math.min(distance * 8, 120);
-                    
-                    const x = Math.sin(bearing) * scaledDistance;
-                    const z = -Math.cos(bearing) * scaledDistance;
-                    
-                    object.position.set(x, 0, z);
-                    poi.distance = distance;
+                    this.mapMarkers.forEach(marker => marker.setMap(null));
+                    this.mapMarkers = [];
+
+                    this.cardLocations.forEach(card => {
+                        const marker = new google.maps.Marker({
+                            position: { lat: card.lat, lng: card.lng },
+                            map: this.map,
+                            title: card.name,
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 15,
+                                fillColor: card.rarity === 'legendary' ? '#FFD700' : 
+                                          card.rarity === 'rare' ? '#FF6B35' : '#4CAF50',
+                                fillOpacity: 0.9,
+                                strokeColor: '#fff',
+                                strokeWeight: 2
+                            }
+                        });
+
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `
+                                <div style="padding: 10px; max-width: 200px;">
+                                    <h3 style="margin: 0 0 5px 0; color: #333;">${card.flag} ${card.name}</h3>
+                                    <p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">${card.team}</p>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="background: #FF6B35; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
+                                            ${card.position}
+                                        </span>
+                                        <span style="background: #FFD700; color: black; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                                            ${card.rating}
+                                        </span>
+                                    </div>
+                                </div>
+                            `
+                        });
+
+                        marker.addListener('click', () => {
+                            infoWindow.open(this.map, marker);
+                        });
+
+                        this.mapMarkers.push(marker);
+                    });
                 } catch (error) {
-                    console.error('POI position update error:', error);
+                    console.error('Map markers error:', error);
                 }
             }
 
@@ -1096,8 +1401,7 @@
                 try {
                     if (event.alpha !== null && this.camera) {
                         this.heading = event.alpha;
-                        const headingEl = document.getElementById('heading');
-                        if (headingEl) headingEl.textContent = Math.round(this.heading);
+                        document.getElementById('heading').textContent = Math.round(this.heading);
                         
                         const alpha = event.alpha * Math.PI / 180;
                         const beta = event.beta * Math.PI / 180;
@@ -1115,21 +1419,44 @@
                     this.userLat = position.coords.latitude;
                     this.userLng = position.coords.longitude;
                     
-                    const latEl = document.getElementById('lat');
-                    const lngEl = document.getElementById('lng');
-                    if (latEl) latEl.textContent = this.userLat.toFixed(4);
-                    if (lngEl) lngEl.textContent = this.userLng.toFixed(4);
+                    document.getElementById('lat').textContent = this.userLat.toFixed(4);
+                    document.getElementById('lng').textContent = this.userLng.toFixed(4);
                     
-                    this.pois.forEach((poi, index) => {
-                        if (this.poiObjects[index]) {
-                            this.updatePOIPosition(this.poiObjects[index], poi);
+                    this.cardLocations.forEach((card, index) => {
+                        if (this.cardObjects[index]) {
+                            this.updateCardPosition(this.cardObjects[index], card);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Position update error:', error);
+                }
+            }
+
+            animate() {
+                try {
+                    requestAnimationFrame(() => this.animate());
+                    
+                    if (this.currentMode !== 'ar' || !this.renderer || !this.scene || !this.camera) {
+                        return;
+                    }
+                    
+                    const time = Date.now() * 0.001;
+                    this.cardObjects.forEach(obj => {
+                        if (obj && obj.children && obj.children[0]) {
+                            const card = obj.children[0];
+                            if (card.userData.originalY !== undefined) {
+                                card.position.y = card.userData.originalY + 
+                                                Math.sin(time + card.userData.animationOffset) * 1.5;
+                                card.rotation.y = time * 0.5; // Rotate the card
+                            }
+                            obj.lookAt(this.camera.position);
                         }
                     });
                     
-                    this.updateMapLocation();
-                    this.addMapMarkers();
+                    this.renderer.render(this.scene, this.camera);
+                    this.checkNearbyCards();
                 } catch (error) {
-                    console.error('Position update error:', error);
+                    console.error('Animation error:', error);
                 }
             }
 
@@ -1152,78 +1479,6 @@
                 const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
                          Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
                 return Math.atan2(y, x);
-            }
-
-            animate() {
-                try {
-                    requestAnimationFrame(() => this.animate());
-                    
-                    if (!this.isARMode || !this.renderer || !this.scene || !this.camera) {
-                        return;
-                    }
-                    
-                    const time = Date.now() * 0.001;
-                    this.poiObjects.forEach(obj => {
-                        if (obj && obj.children && obj.children[0]) {
-                            const marker = obj.children[0];
-                            if (marker.userData.originalY !== undefined) {
-                                marker.position.y = marker.userData.originalY + 
-                                                  Math.sin(time + marker.userData.animationOffset) * 1.5;
-                            }
-                            obj.lookAt(this.camera.position);
-                        }
-                    });
-                    
-                    this.renderer.render(this.scene, this.camera);
-                    this.checkNearbyPOIs();
-                } catch (error) {
-                    console.error('Animation error:', error);
-                }
-            }
-
-            checkNearbyPOIs() {
-                if (!this.isARMode) return;
-                
-                try {
-                    const nearbyPOI = this.pois.find(poi => poi.distance < 75);
-                    
-                    if (nearbyPOI && nearbyPOI !== this.currentPOI) {
-                        this.showPOIInfo(nearbyPOI);
-                        this.currentPOI = nearbyPOI;
-                    } else if (!nearbyPOI && this.currentPOI) {
-                        this.hidePOIInfo();
-                        this.currentPOI = null;
-                    }
-                } catch (error) {
-                    console.error('POI check error:', error);
-                }
-            }
-
-            showPOIInfo(poi) {
-                try {
-                    const infoDiv = document.getElementById('poiInfo');
-                    const iconEl = document.getElementById('poiIcon');
-                    const nameEl = document.getElementById('poiName');
-                    const descEl = document.getElementById('poiDescription');
-                    const distanceEl = document.getElementById('poiDistance');
-                    
-                    if (iconEl) iconEl.textContent = poi.icon;
-                    if (nameEl) nameEl.textContent = poi.name;
-                    if (descEl) descEl.textContent = poi.description;
-                    if (distanceEl) distanceEl.textContent = Math.round(poi.distance);
-                    if (infoDiv) infoDiv.classList.add('show');
-                } catch (error) {
-                    console.error('Show POI info error:', error);
-                }
-            }
-
-            hidePOIInfo() {
-                try {
-                    const infoDiv = document.getElementById('poiInfo');
-                    if (infoDiv) infoDiv.classList.remove('show');
-                } catch (error) {
-                    console.error('Hide POI info error:', error);
-                }
             }
 
             updateStatus(message, isError = false) {
@@ -1251,23 +1506,16 @@
             }
         }
 
-        // Global functions
         function initMap() {
             console.log("Google Maps API loaded");
         }
 
-        // Initialize when page loads
         window.addEventListener('load', () => {
             try {
-                new ARDashboard();
+                new WorldCupCardCollector();
             } catch (error) {
-                console.error('Failed to initialize AR Dashboard:', error);
+                console.error('Failed to initialize World Cup Card Collector:', error);
             }
-        });
-
-        // Handle errors globally
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
         });
     </script>
 </body>
