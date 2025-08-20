@@ -1626,13 +1626,9 @@
                 
                 switch (this.currentMode) {
                     case 'map':
-                        // Hide indicator for map mode
-                        indicator.style.display = 'none';
-                        break;
                     case 'ar':
-                        indicator.classList.add('ar-mode');
-                        indicator.innerHTML = '<span class="control-icon">📱</span><span>AR HUNT</span>';
-                        indicator.style.display = 'flex';
+                        // Hide indicator for map and AR modes
+                        indicator.style.display = 'none';
                         break;
                     case 'album':
                         indicator.classList.add('album-mode');
@@ -1657,14 +1653,23 @@
                 document.getElementById('canvas').style.display = 'block';
                 document.getElementById('albumView').style.display = 'none';
                 
-                // Show 3D soccer ball animation
+                // Show 3D soccer ball animation with higher z-index
                 const soccerBall = document.getElementById('soccerBall3D');
                 if (soccerBall) {
+                    console.log('Showing soccer ball in AR mode'); // Debug log
                     soccerBall.style.display = 'block';
+                    soccerBall.style.zIndex = '200'; // Ensure it's above everything
                     
-                    // Hide soccer ball after 3 seconds
+                    // Hide soccer ball after 3 seconds with fade out
                     setTimeout(() => {
-                        soccerBall.style.display = 'none';
+                        soccerBall.style.opacity = '0';
+                        soccerBall.style.transition = 'opacity 0.5s ease';
+                        
+                        setTimeout(() => {
+                            soccerBall.style.display = 'none';
+                            soccerBall.style.opacity = '1'; // Reset for next time
+                            soccerBall.style.transition = '';
+                        }, 500);
                     }, 3000);
                 }
                 
