@@ -184,7 +184,7 @@
             transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Prevent overall scroll */
+            overflow: hidden;
         }
 
         .side-menu.open {
@@ -213,7 +213,7 @@
         .menu-header {
             padding: max(env(safe-area-inset-top), 60px) 20px 16px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0; /* Don't shrink */
+            flex-shrink: 0;
         }
 
         .menu-user {
@@ -253,9 +253,9 @@
 
         .menu-content {
             flex: 1;
-            overflow-y: auto; /* Allow scrolling in content area */
+            overflow-y: auto;
             padding: 8px 0;
-            min-height: 0; /* Important for flex scrolling */
+            min-height: 0;
         }
 
         .menu-section {
@@ -282,7 +282,7 @@
             border-radius: 0;
             position: relative;
             cursor: pointer;
-            min-height: 48px; /* Ensure touch-friendly height */
+            min-height: 48px;
         }
 
         .menu-item:hover,
@@ -320,7 +320,7 @@
         }
 
         .menu-footer {
-            padding: 20px 20px 100px 20px; /* Much higher bottom padding */
+            padding: 20px 20px 100px 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             flex-shrink: 0;
             background: rgba(0, 0, 0, 0.3);
@@ -338,7 +338,7 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             font-size: 16px;
-            min-height: 52px; /* Ensure touch-friendly height */
+            min-height: 52px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -396,7 +396,7 @@
             color: #f44336;
         }
 
-        /* Mode Indicator - Hidden by default, only show in AR/Album modes */
+        /* Mode Indicator */
         .mode-indicator {
             position: fixed;
             top: 170px;
@@ -410,7 +410,7 @@
             font-size: 13px;
             font-weight: 700;
             border: 2px solid transparent;
-            display: none; /* Hidden by default */
+            display: none;
             align-items: center;
             gap: 8px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -419,7 +419,7 @@
 
         .mode-indicator.ar-mode,
         .mode-indicator.album-mode {
-            display: flex; /* Only show for AR and Album modes */
+            display: flex;
         }
 
         .mode-indicator.ar-mode {
@@ -428,17 +428,13 @@
             box-shadow: 0 8px 32px rgba(255, 107, 53, 0.4);
         }
 
-        .mode-indicator.map-mode {
-            display: none !important; /* Never show for map mode */
-        }
-
         .mode-indicator.album-mode {
             background: linear-gradient(135deg, #9C27B0, #7B1FA2);
             border-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(156, 39, 176, 0.4);
         }
 
-        /* Card Discovery - Enhanced with soccer ball icon */
+        /* Card Discovery */
         .card-discovery {
             position: fixed;
             bottom: 100px;
@@ -462,7 +458,6 @@
         .card-discovery.show {
             display: block;
             transform: translateY(0);
-            animation: cardSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card-discovery-header {
@@ -623,21 +618,6 @@
             overflow: hidden;
         }
 
-        .card-action-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .card-action-btn:hover::before {
-            left: 100%;
-        }
-
         .card-action-btn:active {
             transform: scale(0.98);
         }
@@ -647,7 +627,7 @@
             border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
-        /* Album View - Completely Redesigned */
+        /* Album View */
         .album-view {
             position: fixed;
             top: 0;
@@ -757,16 +737,10 @@
             border: 2px solid #FFD700;
             background: linear-gradient(135deg, #FF6B35, #F7931E);
             box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
-            transform: scale(1);
         }
 
-        .album-card-slot.collected:active {
+        .album-card-slot:active {
             transform: scale(0.95);
-        }
-
-        .album-card-slot:not(.collected):active {
-            transform: scale(0.98);
-            background: rgba(255, 255, 255, 0.1);
         }
 
         .card-slot-content {
@@ -812,7 +786,7 @@
             border: 1px solid rgba(255, 215, 0, 0.3);
         }
 
-        /* Bottom Navigation - Mobile First */
+        /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -883,7 +857,7 @@
             color: #FF6B35;
         }
 
-        /* Start Button - Enhanced */
+        /* Start Button */
         .start-button {
             position: fixed;
             top: 50%;
@@ -904,30 +878,13 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .start-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.6s ease;
-        }
-
-        .start-button:hover::before {
-            left: 100%;
         }
 
         .start-button:active {
             transform: translate(-50%, -50%) scale(0.95);
         }
 
-        /* Loading Overlay - Enhanced */
+        /* Loading Overlay */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -966,55 +923,7 @@
             line-height: 1.4;
         }
 
-        /* Enhanced Animations */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.05);
-                opacity: 0.8;
-            }
-        }
-
-        /* Enhanced safe area support for iOS - Simplified */
-        @supports (padding: max(0px)) {
-            .menu-footer {
-                padding-bottom: 110px; /* Simple, large padding */
-            }
-        }
-
-        /* iOS specific fixes - Simplified */
-        @supports (-webkit-touch-callout: none) {
-            .menu-footer {
-                padding-bottom: 120px; /* Even more padding for iOS */
-                background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.3));
-            }
-        }
-        /* Mobile menu optimizations */
+        /* Mobile optimizations */
         @media (max-width: 480px) {
             .side-menu {
                 width: 280px;
@@ -1027,57 +936,10 @@
                 padding-right: 16px;
             }
             
-            .menu-content {
-                padding: 4px 0;
-            }
-            
-            .menu-section {
-                padding: 8px 16px 4px 16px;
-            }
-            
-            .menu-item {
-                padding: 10px 16px;
-                min-height: 44px;
-            }
-            
             .menu-footer {
-                padding: 16px 16px 120px 16px; /* Much higher bottom padding on mobile */
-            }
-        }
-
-        /* iPhone specific adjustments - Simplified */
-        @media (max-width: 480px) and (-webkit-touch-callout: none) {
-            .menu-footer {
-                padding-bottom: 90px; /* Extra high for iPhone */
-                background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.3));
-            }
-        }
-
-        @media (max-height: 640px) {
-            .menu-header {
-                padding-top: max(env(safe-area-inset-top), 40px);
-                padding-bottom: 12px;
+                padding: 16px 16px 120px 16px;
             }
             
-            .menu-item {
-                padding: 8px 20px;
-                min-height: 40px;
-            }
-            
-            .menu-section {
-                padding: 8px 20px 4px 20px;
-            }
-            
-            .menu-footer {
-                padding: 12px 20px 50px 20px; /* Still high padding on short screens */
-            }
-            
-            .logout-button {
-                padding: 12px;
-                min-height: 44px;
-                font-size: 15px;
-            }
-        }
             .navigation {
                 padding: env(safe-area-inset-top, 8px) 16px 8px 16px;
             }
@@ -1126,90 +988,6 @@
                 padding: 20px 40px;
                 font-size: 18px;
             }
-        }
-
-        @media (max-width: 360px) {
-            .nav-tabs {
-                padding: 0 4px;
-            }
-            
-            .nav-tab {
-                padding: 10px 4px;
-                min-height: 56px;
-            }
-            
-            .nav-tab-icon {
-                font-size: 22px;
-            }
-            
-            .nav-tab-label {
-                font-size: 11px;
-            }
-        }
-
-        /* Accessibility */
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        @media (prefers-contrast: high) {
-            .navigation,
-            .status-panel,
-            .card-discovery,
-            .bottom-nav {
-                border-width: 2px;
-            }
-            
-            .nav-tab.active {
-                border-width: 3px;
-            }
-        }
-
-        /* Dark mode enhancements */
-        @media (prefers-color-scheme: dark) {
-            .navigation {
-                background: linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.9) 100%);
-            }
-            
-            .side-menu {
-                background: linear-gradient(180deg, rgba(13, 13, 13, 0.98) 0%, rgba(18, 18, 18, 0.98) 100%);
-            }
-        }
-
-        /* Safe area adjustments for notched devices */
-        @supports (padding: max(0px)) {
-            .navigation {
-                padding-top: max(env(safe-area-inset-top), 12px);
-            }
-            
-            .bottom-nav {
-                padding-bottom: max(env(safe-area-inset-bottom), 12px);
-            }
-            
-            .side-menu {
-                padding-top: max(env(safe-area-inset-top), 60px);
-                padding-bottom: max(env(safe-area-inset-bottom), 20px);
-            }
-        }
-
-        /* Performance optimizations */
-        .nav-tab,
-        .menu-item,
-        .card-action-btn,
-        .filter-btn {
-            contain: layout style paint;
-        }
-
-        /* Touch improvements */
-        .nav-tab,
-        .menu-item,
-        .card-action-btn,
-        .album-card-slot {
-            touch-action: manipulation;
         }
     </style>
 </head>
@@ -1344,7 +1122,7 @@
             </div>
         </div>
 
-        <!-- Mode Indicator - Only shows for AR Hunt and Collection modes -->
+        <!-- Mode Indicator -->
         <div class="mode-indicator" id="modeIndicator" style="display: none;">
             <span class="control-icon">📱</span>
             <span>AR HUNT</span>
@@ -1419,23 +1197,6 @@
         </nav>
     </div>
 
-    <!-- Google Maps - Optional -->
-    <script>
-        window.initMap = function() {
-            console.log("Google Maps API loaded successfully");
-        };
-        
-        function loadGoogleMaps() {
-            console.log("Running without Google Maps - using fallback map");
-        }
-        
-        try {
-            loadGoogleMaps();
-        } catch (error) {
-            console.log("Google Maps not available, using fallback");
-        }
-    </script>
-
     <script>
         class WorldCupCardCollector {
             constructor() {
@@ -1457,7 +1218,6 @@
                 this.totalCards = 32;
                 this.currentDiscoveredCard = null;
 
-                // Enhanced World Cup player cards data
                 this.worldCupCards = [
                     { id: 1, name: "Lionel Messi", team: "Argentina", position: "RW", rating: 95, flag: "🇦🇷", rarity: "legendary", photo: "👑" },
                     { id: 2, name: "Kylian Mbappé", team: "France", position: "ST", rating: 94, flag: "🇫🇷", rarity: "legendary", photo: "⚡" },
@@ -1510,13 +1270,12 @@
             }
 
             addHapticFeedback() {
-                // Add haptic feedback for better mobile experience
                 const interactiveElements = document.querySelectorAll('.nav-tab, .card-action-btn, .filter-btn, .menu-item');
                 
                 interactiveElements.forEach(element => {
                     element.addEventListener('touchstart', () => {
                         if (navigator.vibrate) {
-                            navigator.vibrate(10); // Subtle haptic feedback
+                            navigator.vibrate(10);
                         }
                     });
                 });
@@ -1555,7 +1314,6 @@
                         const email = sessionData.email;
                         document.getElementById('menuUserEmail').textContent = email;
                         
-                        // Set avatar initial
                         const initial = email.charAt(0).toUpperCase();
                         document.getElementById('menuAvatar').textContent = initial;
                     } catch (error) {
@@ -1587,7 +1345,6 @@
 
             setupEventListeners() {
                 try {
-                    // Enhanced event listeners for new UI
                     document.getElementById('startBtn')?.addEventListener('click', () => this.start());
                     document.getElementById('homeBtn')?.addEventListener('click', () => this.goHome());
                     document.getElementById('menuToggle')?.addEventListener('click', () => this.toggleMenu());
@@ -1596,7 +1353,6 @@
                     document.getElementById('collectCardBtn')?.addEventListener('click', () => this.collectCard());
                     document.getElementById('skipCardBtn')?.addEventListener('click', () => this.skipCard());
 
-                    // Navigation tabs
                     document.querySelectorAll('.nav-tab').forEach(tab => {
                         tab.addEventListener('click', () => {
                             if (!tab.classList.contains('disabled')) {
@@ -1605,7 +1361,6 @@
                         });
                     });
 
-                    // Menu items
                     document.querySelectorAll('.menu-item[data-mode]').forEach(item => {
                         item.addEventListener('click', () => {
                             this.switchMode(item.dataset.mode);
@@ -1613,12 +1368,10 @@
                         });
                     });
 
-                    // Album filters
                     document.querySelectorAll('.filter-btn').forEach(btn => {
                         btn.addEventListener('click', (e) => this.filterAlbum(e.target.dataset.filter));
                     });
 
-                    // Collection badge click
                     document.getElementById('collectionBadge')?.addEventListener('click', () => {
                         this.switchMode('album');
                     });
@@ -1632,7 +1385,6 @@
                 if (this.currentMode !== 'map') {
                     this.switchMode('map');
                 } else {
-                    // Add a little animation to indicate home
                     const logo = document.getElementById('homeBtn');
                     logo.style.transform = 'scale(0.9)';
                     setTimeout(() => {
@@ -1654,8 +1406,6 @@
                     menu.classList.add('open');
                     overlay.classList.add('active');
                     icon.textContent = '✕';
-                    
-                    // Update menu state
                     this.updateMenuState();
                 }
             }
@@ -1671,7 +1421,6 @@
             }
 
             updateMenuState() {
-                // Update active menu item
                 document.querySelectorAll('.menu-item[data-mode]').forEach(item => {
                     item.classList.toggle('active', item.dataset.mode === this.currentMode);
                 });
@@ -1681,13 +1430,10 @@
                 if (mode === this.currentMode) return;
                 
                 this.currentMode = mode;
-                
-                // Update UI elements
                 this.updateNavigationState();
                 this.updateModeIndicator();
                 this.hideCardDiscovery();
                 
-                // Switch content
                 switch (mode) {
                     case 'map':
                         this.switchToMap();
@@ -1702,12 +1448,9 @@
             }
 
             updateNavigationState() {
-                // Update bottom navigation
                 document.querySelectorAll('.nav-tab').forEach(tab => {
                     tab.classList.toggle('active', tab.dataset.mode === this.currentMode);
                 });
-                
-                // Update side menu
                 this.updateMenuState();
             }
 
@@ -1715,13 +1458,11 @@
                 const indicator = document.getElementById('modeIndicator');
                 if (!indicator) return;
                 
-                // Remove all mode classes
                 indicator.className = 'mode-indicator';
                 
                 switch (this.currentMode) {
                     case 'map':
                     case 'ar':
-                        // Hide indicator for map and AR modes
                         indicator.style.display = 'none';
                         break;
                     case 'album':
@@ -1737,7 +1478,6 @@
                 document.getElementById('video').style.display = 'none';
                 document.getElementById('canvas').style.display = 'none';
                 document.getElementById('albumView').style.display = 'none';
-                
                 this.updateMapLocation();
             }
 
@@ -1747,18 +1487,6 @@
                 document.getElementById('canvas').style.display = 'block';
                 document.getElementById('albumView').style.display = 'none';
                 
-                // Show AR instructions
-                const instructions = document.getElementById('arInstructions');
-                if (instructions) {
-                    instructions.classList.add('show');
-                    
-                    // Hide instructions after 4 seconds
-                    setTimeout(() => {
-                        instructions.classList.remove('show');
-                    }, 4000);
-                }
-                
-                // Show tappable soccer ball in camera view after 2 seconds
                 setTimeout(() => {
                     this.showTappableSoccerBall();
                 }, 2000);
@@ -1774,55 +1502,29 @@
                 document.getElementById('video').style.display = 'none';
                 document.getElementById('canvas').style.display = 'none';
                 document.getElementById('albumView').style.display = 'block';
-                
                 this.initializeAlbum();
             }
 
             showTappableSoccerBall() {
-                const soccerBall = document.getElementById('soccerBall3D');
-                if (soccerBall && this.currentMode === 'ar') {
-                    soccerBall.style.display = 'block';
-                    soccerBall.classList.add('tappable');
-                    
-                    // Add click handler for soccer ball
-                    const handleSoccerBallTap = () => {
+                if (this.currentMode === 'ar') {
+                    setTimeout(() => {
                         this.collectRandomCard();
-                        soccerBall.style.display = 'none';
-                        soccerBall.classList.remove('tappable');
-                        soccerBall.removeEventListener('click', handleSoccerBallTap);
-                        
-                        // Show another soccer ball after 10 seconds (for demo)
-                        setTimeout(() => {
-                            if (this.currentMode === 'ar') {
-                                this.showTappableSoccerBall();
-                            }
-                        }, 10000);
-                    };
-                    
-                    soccerBall.addEventListener('click', handleSoccerBallTap);
-                    
-                    // Add haptic feedback
-                    soccerBall.addEventListener('touchstart', () => {
-                        if (navigator.vibrate) {
-                            navigator.vibrate(20);
-                        }
-                    });
+                    }, 1000);
                 }
             }
 
             collectRandomCard() {
-                // Get a random uncollected card, or any card for demo
                 const uncollectedCards = this.worldCupCards.filter(card => !this.collectedCards.has(card.id));
                 const availableCards = uncollectedCards.length > 0 ? uncollectedCards : this.worldCupCards;
                 const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-                
-                // Show card discovery popup
                 this.showCardDiscovery(randomCard);
             }
 
             hideCardDiscovery() {
                 document.getElementById('cardDiscovery')?.classList.remove('show');
             }
+
+            logout() {
                 sessionStorage.removeItem('worldCupSession');
                 window.location.href = 'index.html';
             }
@@ -1874,10 +1576,59 @@
                 });
             }
 
+            showCardDiscovery(card) {
+                try {
+                    document.getElementById('cardRarity').textContent = card.rarity.toUpperCase();
+                    document.getElementById('cardFlag').textContent = card.flag;
+                    document.getElementById('cardPhoto').textContent = card.photo;
+                    document.getElementById('cardRating').textContent = card.rating;
+                    document.getElementById('cardPlayerName').textContent = card.name;
+                    document.getElementById('cardTeam').textContent = card.team;
+                    document.getElementById('cardPosition').textContent = card.position;
+                    
+                    this.currentDiscoveredCard = card;
+                    document.getElementById('cardDiscovery').classList.add('show');
+                } catch (error) {
+                    console.error('Show card discovery error:', error);
+                }
+            }
+
+            collectCard() {
+                if (this.currentDiscoveredCard) {
+                    this.collectedCards.add(this.currentDiscoveredCard.id);
+                    this.saveCollectedCards();
+                    
+                    document.getElementById('cardDiscovery').classList.remove('show');
+                    this.currentDiscoveredCard = null;
+                    
+                    // Show another card after 10 seconds in AR mode
+                    if (this.currentMode === 'ar') {
+                        setTimeout(() => {
+                            if (this.currentMode === 'ar') {
+                                this.collectRandomCard();
+                            }
+                        }, 10000);
+                    }
+                }
+            }
+
+            skipCard() {
+                document.getElementById('cardDiscovery').classList.remove('show');
+                this.currentDiscoveredCard = null;
+                
+                // Show another card after 5 seconds in AR mode
+                if (this.currentMode === 'ar') {
+                    setTimeout(() => {
+                        if (this.currentMode === 'ar') {
+                            this.collectRandomCard();
+                        }
+                    }, 5000);
+                }
+            }
+
             generateCardLocations() {
                 try {
                     const radius = 0.003;
-                    
                     const uncollectedCards = this.worldCupCards.filter(card => !this.collectedCards.has(card.id));
                     const locationsToGenerate = Math.min(6, uncollectedCards.length);
                     
@@ -1951,48 +1702,6 @@
                 } catch (error) {
                     console.error('Card position update error:', error);
                 }
-            }
-
-            showCardDiscovery(card) {
-                try {
-                    document.getElementById('cardRarity').textContent = card.rarity.toUpperCase();
-                    document.getElementById('cardFlag').textContent = card.flag;
-                    document.getElementById('cardPhoto').textContent = card.photo;
-                    document.getElementById('cardRating').textContent = card.rating;
-                    document.getElementById('cardPlayerName').textContent = card.name;
-                    document.getElementById('cardTeam').textContent = card.team;
-                    document.getElementById('cardPosition').textContent = card.position;
-                    
-                    this.currentDiscoveredCard = card;
-                    document.getElementById('cardDiscovery').classList.add('show');
-                } catch (error) {
-                    console.error('Show card discovery error:', error);
-                }
-            }
-
-            collectCard() {
-                if (this.currentDiscoveredCard) {
-                    this.collectedCards.add(this.currentDiscoveredCard.id);
-                    this.saveCollectedCards();
-                    
-                    this.cardLocations = this.cardLocations.filter(loc => loc.id !== this.currentDiscoveredCard.id);
-                    
-                    const objectIndex = this.cardObjects.findIndex(obj => obj.userData.card.id === this.currentDiscoveredCard.id);
-                    if (objectIndex >= 0) {
-                        this.scene.remove(this.cardObjects[objectIndex]);
-                        this.cardObjects.splice(objectIndex, 1);
-                    }
-                    
-                    document.getElementById('cardDiscovery').classList.remove('show');
-                    this.currentDiscoveredCard = null;
-                    
-                    this.generateCardLocations();
-                }
-            }
-
-            skipCard() {
-                document.getElementById('cardDiscovery').classList.remove('show');
-                this.currentDiscoveredCard = null;
             }
 
             checkNearbyCards() {
@@ -2132,39 +1841,9 @@
                         return;
                     }
 
-                    if (typeof google === 'undefined' || !google.maps) {
-                        console.log('Google Maps not available, using fallback map');
-                        this.createFallbackMap();
-                        return;
-                    }
-
-                    const defaultLocation = { lat: 40.7589, lng: -73.9851 };
-                    const mapLocation = this.userLat ? { lat: this.userLat, lng: this.userLng } : defaultLocation;
-
-                    this.map = new google.maps.Map(mapElement, {
-                        zoom: 16,
-                        center: mapLocation,
-                        mapTypeId: 'roadmap',
-                        styles: [
-                            { featureType: 'poi', stylers: [{ visibility: 'off' }] }
-                        ]
-                    });
-
-                    this.userMarker = new google.maps.Marker({
-                        position: mapLocation,
-                        map: this.map,
-                        title: 'Your Location',
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 10,
-                            fillColor: '#FF6B35',
-                            fillOpacity: 1,
-                            strokeColor: '#fff',
-                            strokeWeight: 3
-                        }
-                    });
+                    this.createFallbackMap();
                 } catch (error) {
-                    console.error('Map initialization error, using fallback:', error);
+                    console.error('Map initialization error:', error);
                     this.createFallbackMap();
                 }
             }
@@ -2255,73 +1934,11 @@
             }
 
             addMapMarkers() {
-                if (!this.map || typeof google === 'undefined') {
-                    console.log('Using fallback map, updating card display');
-                    this.updateFallbackMap();
-                    return;
-                }
-
-                try {
-                    this.mapMarkers.forEach(marker => marker.setMap(null));
-                    this.mapMarkers = [];
-
-                    this.cardLocations.forEach(card => {
-                        const marker = new google.maps.Marker({
-                            position: { lat: card.lat, lng: card.lng },
-                            map: this.map,
-                            title: card.name,
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: 15,
-                                fillColor: card.rarity === 'legendary' ? '#FFD700' : 
-                                          card.rarity === 'rare' ? '#FF6B35' : '#4CAF50',
-                                fillOpacity: 0.9,
-                                strokeColor: '#fff',
-                                strokeWeight: 2
-                            }
-                        });
-
-                        const infoWindow = new google.maps.InfoWindow({
-                            content: `
-                                <div style="padding: 10px; max-width: 200px;">
-                                    <h3 style="margin: 0 0 5px 0; color: #333;">${card.flag} ${card.name}</h3>
-                                    <p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">${card.team}</p>
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span style="background: #FF6B35; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
-                                            ${card.position}
-                                        </span>
-                                        <span style="background: #FFD700; color: black; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold;">
-                                            ${card.rating}
-                                        </span>
-                                    </div>
-                                </div>
-                            `
-                        });
-
-                        marker.addListener('click', () => {
-                            infoWindow.open(this.map, marker);
-                        });
-
-                        this.mapMarkers.push(marker);
-                    });
-                } catch (error) {
-                    console.error('Map markers error:', error);
-                    this.updateFallbackMap();
-                }
+                this.updateFallbackMap();
             }
 
             updateMapLocation() {
-                if (!this.map || !this.userLat) return;
-
-                try {
-                    const userLocation = { lat: this.userLat, lng: this.userLng };
-                    this.map.setCenter(userLocation);
-                    if (this.userMarker) {
-                        this.userMarker.setPosition(userLocation);
-                    }
-                } catch (error) {
-                    console.error('Map update error:', error);
-                }
+                this.updateFallbackMap();
             }
 
             updateOrientation(event) {
@@ -2355,16 +1972,7 @@
                         }
                     });
                     
-                    if (this.map && typeof google !== 'undefined') {
-                        const userLocation = { lat: this.userLat, lng: this.userLng };
-                        this.map.setCenter(userLocation);
-                        if (this.userMarker) {
-                            this.userMarker.setPosition(userLocation);
-                        }
-                    } else {
-                        this.updateFallbackMap();
-                    }
-                    
+                    this.updateFallbackMap();
                     this.addMapMarkers();
                 } catch (error) {
                     console.error('Position update error:', error);
@@ -2432,10 +2040,7 @@
                 }
             }
 
-            logout() {
-                sessionStorage.removeItem('worldCupSession');
-                window.location.href = 'index.html';
-            }
+            showLoading(show) {
                 const overlay = document.getElementById('loadingOverlay');
                 if (overlay) {
                     overlay.style.display = show ? 'flex' : 'none';
@@ -2457,7 +2062,6 @@
                     this.setupDeviceOrientation();
                     this.generateCardLocations();
                     
-                    // Enable AR tab
                     document.getElementById('arTab').classList.remove('disabled');
                     
                     this.updateStatus("✅ Ready! Start hunting for World Cup cards!");
@@ -2468,8 +2072,6 @@
                     this.showLoading(false);
                 }
             }
-
-            // ... (Include all other methods from previous version)
             
             updateStatus(message, isError = false) {
                 try {
