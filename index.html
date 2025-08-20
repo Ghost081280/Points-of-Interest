@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS AR Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 3;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        #status {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        .poi-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 3;
+            color: white;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 4;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .start-button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <button id="startBtn" class="start-button">Start AR Experience</button>
+        
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
+        
+        <div id="ui">
+            <div id="status">Loading GPS AR...</div>
+            <div>Lat: <span id="lat">--</span></div>
+            <div>Lng: <span id="lng">--</span></div>
+            <div>Heading: <span id="heading">--</span>°</div>
+            <div>POIs Found: <span id="poiCount">0</span></div>
+        </div>
+
+        <div id="poiInfo" class="poi-info">
+            <h3 id="poiName"></h3>
+            <p id="poiDescription"></p>
+            <p>Distance: <span id="poiDistance"></span>m</p>
+        </div>
+    </div>
+
+    <script>
+        class GPSARApp {
+            constructor() {
+                this.userLat = null;
+                this.userLng = null;
+                this.heading = 0;
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.pois = [];
+                this.poiObjects = [];
+                this.isStarted = false;
+
+                // Example POIs around different locations (will be relative to user's position)
+                this.samplePOIs = [
+                    { name: "Coffee Shop", description: "Great coffee nearby!", type: "food", color: 0x8B4513 },
+                    { name: "Park", description: "Beautiful green space", type: "nature", color: 0x228B22 },
+                    { name: "Museum", description: "Local history museum", type: "culture", color: 0x4169E1 },
+                    { name: "Restaurant", description: "Popular local restaurant", type: "food", color: 0xFF6347 },
+                    { name: "Store", description: "Shopping center", type: "shopping", color: 0xFF1493 },
+                ];
+
+                this.init();
+            }
+
+            init() {
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+            }
+
+            async start() {
+                if (this.isStarted) return;
+                this.isStarted = true;
+
+                document.getElementById('startBtn').style.display = 'none';
+                
+                try {
+                    await this.setupCamera();
+                    await this.setupGPS();
+                    this.setupThreeJS();
+                    this.setupDeviceOrientation();
+                    this.generateNearbyPOIs();
+                    this.animate();
+                    
+                    this.updateStatus("AR Ready! Point your camera around to see POIs");
+                } catch (error) {
+                    this.updateStatus(`Error: ${error.message}`, true);
+                }
+            }
+
+            async setupCamera() {
+                const video = document.getElementById('video');
+                
+                const constraints = {
+                    video: {
+                        facingMode: 'environment', // Use back camera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => resolve();
+                });
+            }
+
+            async setupGPS() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error("Geolocation not supported"));
+                        return;
+                    }
+
+                    const options = {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    };
+
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            this.userLat = position.coords.latitude;
+                            this.userLng = position.coords.longitude;
+                            
+                            document.getElementById('lat').textContent = this.userLat.toFixed(6);
+                            document.getElementById('lng').textContent = this.userLng.toFixed(6);
+                            
+                            // Continue watching position
+                            navigator.geolocation.watchPosition(
+                                (pos) => this.updatePosition(pos),
+                                (error) => console.warn("GPS update error:", error),
+                                options
+                            );
+                            
+                            resolve();
+                        },
+                        (error) => {
+                            reject(new Error(`GPS Error: ${error.message}`));
+                        },
+                        options
+                    );
+                });
+            }
+
+            setupThreeJS() {
+                const canvas = document.getElementById('canvas');
+                
+                this.scene = new THREE.Scene();
+                
+                this.camera = new THREE.PerspectiveCamera(
+                    75, 
+                    window.innerWidth / window.innerHeight, 
+                    0.1, 
+                    1000
+                );
+                
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: canvas, 
+                    alpha: true 
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x000000, 0);
+
+                // Add some lighting
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(0, 1, 0);
+                this.scene.add(directionalLight);
+
+                window.addEventListener('resize', () => this.onWindowResize());
+            }
+
+            setupDeviceOrientation() {
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    // iOS 13+ permission request
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response == 'granted') {
+                                window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
+                            }
+                        });
+                } else {
+                    // Android and older iOS
+                    window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
+                }
+            }
+
+            generateNearbyPOIs() {
+                // Generate POIs in a circle around user's location
+                const radius = 0.001; // Roughly 100m radius
+                
+                this.samplePOIs.forEach((poiTemplate, index) => {
+                    const angle = (index / this.samplePOIs.length) * Math.PI * 2;
+                    const distance = radius * (0.5 + Math.random() * 0.5); // Random distance within radius
+                    
+                    const poi = {
+                        ...poiTemplate,
+                        lat: this.userLat + Math.cos(angle) * distance,
+                        lng: this.userLng + Math.sin(angle) * distance,
+                        id: index
+                    };
+                    
+                    this.pois.push(poi);
+                    this.createPOIObject(poi);
+                });
+
+                document.getElementById('poiCount').textContent = this.pois.length;
+            }
+
+            createPOIObject(poi) {
+                // Create a floating marker for the POI
+                const group = new THREE.Group();
+                
+                // Main marker (cylinder)
+                const geometry = new THREE.CylinderGeometry(2, 2, 8, 8);
+                const material = new THREE.MeshLambertMaterial({ color: poi.color });
+                const marker = new THREE.Mesh(geometry, material);
+                marker.position.y = 4;
+                group.add(marker);
+                
+                // Floating animation offset
+                marker.userData.originalY = marker.position.y;
+                marker.userData.animationOffset = Math.random() * Math.PI * 2;
+                
+                // Base platform
+                const baseGeometry = new THREE.CylinderGeometry(3, 3, 1, 8);
+                const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                group.add(base);
+                
+                // Position based on GPS coordinates
+                this.updatePOIPosition(group, poi);
+                
+                group.userData.poi = poi;
+                this.poiObjects.push(group);
+                this.scene.add(group);
+            }
+
+            updatePOIPosition(object, poi) {
+                // Convert GPS coordinates to 3D position relative to user
+                const distance = this.calculateDistance(this.userLat, this.userLng, poi.lat, poi.lng);
+                const bearing = this.calculateBearing(this.userLat, this.userLng, poi.lat, poi.lng);
+                
+                // Scale distance for visibility (1 unit = ~10 meters)
+                const scaledDistance = Math.min(distance * 10, 100);
+                
+                const x = Math.sin(bearing) * scaledDistance;
+                const z = -Math.cos(bearing) * scaledDistance;
+                
+                object.position.set(x, 0, z);
+                
+                // Store distance for UI
+                poi.distance = distance;
+            }
+
+            updateOrientation(event) {
+                if (event.alpha !== null) {
+                    this.heading = event.alpha;
+                    document.getElementById('heading').textContent = Math.round(this.heading);
+                    
+                    // Update camera rotation based on device orientation
+                    const alpha = event.alpha * Math.PI / 180; // Z axis
+                    const beta = event.beta * Math.PI / 180;   // X axis
+                    const gamma = event.gamma * Math.PI / 180; // Y axis
+                    
+                    this.camera.rotation.set(beta - Math.PI/2, alpha, -gamma);
+                }
+            }
+
+            updatePosition(position) {
+                this.userLat = position.coords.latitude;
+                this.userLng = position.coords.longitude;
+                
+                document.getElementById('lat').textContent = this.userLat.toFixed(6);
+                document.getElementById('lng').textContent = this.userLng.toFixed(6);
+                
+                // Update POI positions
+                this.pois.forEach((poi, index) => {
+                    this.updatePOIPosition(this.poiObjects[index], poi);
+                });
+            }
+
+            calculateDistance(lat1, lng1, lat2, lng2) {
+                const R = 6371000; // Earth's radius in meters
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                         Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            calculateBearing(lat1, lng1, lat2, lng2) {
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const lat1Rad = lat1 * Math.PI / 180;
+                const lat2Rad = lat2 * Math.PI / 180;
+                const y = Math.sin(dLng) * Math.cos(lat2Rad);
+                const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+                         Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
+                return Math.atan2(y, x);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Animate floating POI markers
+                const time = Date.now() * 0.001;
+                this.poiObjects.forEach(obj => {
+                    const marker = obj.children[0];
+                    if (marker.userData.originalY !== undefined) {
+                        marker.position.y = marker.userData.originalY + 
+                                          Math.sin(time + marker.userData.animationOffset) * 1;
+                    }
+                    
+                    // Make markers face the camera
+                    obj.lookAt(this.camera.position);
+                });
+                
+                this.renderer.render(this.scene, this.camera);
+                
+                // Check for nearby POIs
+                this.checkNearbyPOIs();
+            }
+
+            checkNearbyPOIs() {
+                const nearbyPOI = this.pois.find(poi => poi.distance < 50); // Within 50 meters
+                
+                if (nearbyPOI) {
+                    this.showPOIInfo(nearbyPOI);
+                } else {
+                    document.getElementById('poiInfo').style.display = 'none';
+                }
+            }
+
+            showPOIInfo(poi) {
+                const infoDiv = document.getElementById('poiInfo');
+                document.getElementById('poiName').textContent = poi.name;
+                document.getElementById('poiDescription').textContent = poi.description;
+                document.getElementById('poiDistance').textContent = Math.round(poi.distance);
+                infoDiv.style.display = 'block';
+            }
+
+            updateStatus(message, isError = false) {
+                const status = document.getElementById('status');
+                status.textContent = message;
+                status.className = isError ? 'error' : '';
+            }
+
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        }
+
+        // Start the app when page loads
+        window.addEventListener('load', () => {
+            new GPSARApp();
+        });
+    </script>
+</body>
+</html>
