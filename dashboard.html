@@ -320,10 +320,11 @@
         }
 
         .menu-footer {
-            padding: 12px 20px max(env(safe-area-inset-bottom), 16px) 20px;
+            padding: 12px 20px calc(env(safe-area-inset-bottom, 16px) + 16px) 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             flex-shrink: 0; /* Don't shrink */
             background: rgba(0, 0, 0, 0.3); /* Slight background to distinguish */
+            margin-bottom: env(safe-area-inset-bottom, 0px); /* Extra margin for iOS */
         }
 
         .logout-button {
@@ -997,6 +998,40 @@
             }
         }
 
+        /* Enhanced safe area support for iOS */
+        @supports (padding: max(0px)) {
+            .side-menu {
+                height: 100vh;
+                height: calc(100vh - env(safe-area-inset-bottom, 0px)); /* Account for bottom safe area */
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+            
+            .menu-header {
+                padding-top: calc(env(safe-area-inset-top, 60px) + 8px);
+            }
+            
+            .menu-footer {
+                padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 20px);
+                margin-bottom: 0; /* Remove margin when using calc */
+            }
+        }
+
+        /* iOS specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .side-menu {
+                height: calc(100vh - env(safe-area-inset-bottom, 0px));
+                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+            }
+            
+            .menu-footer {
+                padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 24px);
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.3));
+            }
+            
+            .logout-button {
+                margin-bottom: 8px; /* Extra space above home indicator */
+            }
+        }
         /* Mobile menu optimizations */
         @media (max-width: 480px) {
             .side-menu {
@@ -1005,7 +1040,7 @@
             }
             
             .menu-header {
-                padding-top: max(env(safe-area-inset-top), 50px);
+                padding-top: calc(env(safe-area-inset-top, 50px) + 8px);
                 padding-left: 16px;
                 padding-right: 16px;
             }
@@ -1024,7 +1059,24 @@
             }
             
             .menu-footer {
-                padding: 8px 16px max(env(safe-area-inset-bottom), 12px) 16px;
+                padding: 8px 16px calc(env(safe-area-inset-bottom, 12px) + 20px) 16px;
+            }
+        }
+
+        /* iPhone specific adjustments */
+        @media (max-width: 480px) and (-webkit-touch-callout: none) {
+            .side-menu {
+                height: calc(100vh - env(safe-area-inset-bottom, 0px) - 8px);
+            }
+            
+            .menu-footer {
+                padding-bottom: calc(env(safe-area-inset-bottom, 12px) + 28px);
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.3));
+            }
+            
+            .logout-button {
+                margin-bottom: 12px;
+                box-shadow: 0 4px 16px rgba(244, 67, 54, 0.3);
             }
         }
 
