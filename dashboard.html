@@ -760,7 +760,27 @@
         </div>
     </div>
 
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
+    <!-- Google Maps - Optional (will work without it) -->
+    <script>
+        // Optional Google Maps initialization
+        window.initMap = function() {
+            console.log("Google Maps API loaded successfully");
+        };
+        
+        // Load Google Maps only if API key is available
+        function loadGoogleMaps() {
+            // For now, we'll work without Google Maps to avoid API key requirement
+            // You can add your API key here later: https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap
+            console.log("Running without Google Maps - using fallback map");
+        }
+        
+        // Try to load maps, but don't fail if it doesn't work
+        try {
+            loadGoogleMaps();
+        } catch (error) {
+            console.log("Google Maps not available, using fallback");
+        }
+    </script>
 
     <script>
         class WorldCupCardCollector {
@@ -1311,8 +1331,15 @@
             initializeMap() {
                 try {
                     const mapElement = document.getElementById('map');
-                    if (!mapElement || typeof google === 'undefined') {
-                        console.warn('Google Maps not available');
+                    if (!mapElement) {
+                        console.warn('Map element not found');
+                        return;
+                    }
+
+                    // Check if Google Maps is available
+                    if (typeof google === 'undefined' || !google.maps) {
+                        console.log('Google Maps not available, using fallback map');
+                        this.createFallbackMap();
                         return;
                     }
 
@@ -1342,12 +1369,106 @@
                         }
                     });
                 } catch (error) {
-                    console.error('Map initialization error:', error);
+                    console.error('Map initialization error, using fallback:', error);
+                    this.createFallbackMap();
+                }
+            }
+
+            createFallbackMap() {
+                try {
+                    const mapElement = document.getElementById('map');
+                    if (!mapElement) return;
+
+                    // Create a simple fallback map interface
+                    mapElement.innerHTML = `
+                        <div style="
+                            width: 100%; 
+                            height: 100%; 
+                            background: linear-gradient(135deg, #1a1a2e, #16213e);
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            text-align: center;
+                            padding: 20px;
+                            position: relative;
+                        ">
+                            <div style="
+                                background: rgba(255, 107, 53, 0.2);
+                                border: 2px solid rgba(255, 107, 53, 0.5);
+                                border-radius: 15px;
+                                padding: 30px;
+                                max-width: 300px;
+                            ">
+                                <div style="font-size: 48px; margin-bottom: 15px;">🗺️</div>
+                                <h2 style="margin: 0 0 10px 0; color: #FF6B35;">Card Hunt Map</h2>
+                                <p style="margin: 0 0 15px 0; opacity: 0.8; font-size: 14px;">
+                                    Switch to AR Hunt mode to find World Cup player cards around you!
+                                </p>
+                                <div style="
+                                    background: rgba(255, 255, 255, 0.1);
+                                    border-radius: 8px;
+                                    padding: 10px;
+                                    margin-top: 15px;
+                                ">
+                                    <div style="font-size: 12px; opacity: 0.7; margin-bottom: 5px;">YOUR LOCATION</div>
+                                    <div style="font-size: 14px; font-weight: 600;" id="fallbackLocation">
+                                        <span id="fallbackLat">--</span>, <span id="fallbackLng">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="
+                                position: absolute;
+                                bottom: 20px;
+                                left: 20px;
+                                right: 20px;
+                                background: rgba(0, 0, 0, 0.8);
+                                border-radius: 10px;
+                                padding: 15px;
+                                text-align: center;
+                            ">
+                                <div style="font-size: 12px; opacity: 0.7; margin-bottom: 5px;">CARD LOCATIONS NEARBY</div>
+                                <div style="font-size: 24px;" id="fallbackCardCount">🃏 🃏 🃏</div>
+                                <div style="font-size: 12px; margin-top: 5px; color: #FF6B35;">Use AR Hunt to discover them!</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Update fallback map with location data
+                    this.updateFallbackMap();
+                } catch (error) {
+                    console.error('Fallback map creation error:', error);
+                }
+            }
+
+            updateFallbackMap() {
+                try {
+                    const latEl = document.getElementById('fallbackLat');
+                    const lngEl = document.getElementById('fallbackLng');
+                    
+                    if (latEl && this.userLat) latEl.textContent = this.userLat.toFixed(4);
+                    if (lngEl && this.userLng) lngEl.textContent = this.userLng.toFixed(4);
+                    
+                    // Update card count display
+                    const cardCountEl = document.getElementById('fallbackCardCount');
+                    if (cardCountEl) {
+                        const cardIcons = '🃏 '.repeat(Math.min(this.cardLocations.length, 6));
+                        cardCountEl.textContent = cardIcons || '🔍 Searching...';
+                    }
+                } catch (error) {
+                    console.error('Fallback map update error:', error);
                 }
             }
 
             addMapMarkers() {
-                if (!this.map) return;
+                // Only try to add markers if Google Maps is available
+                if (!this.map || typeof google === 'undefined') {
+                    console.log('Using fallback map, updating card display');
+                    this.updateFallbackMap();
+                    return;
+                }
 
                 try {
                     this.mapMarkers.forEach(marker => marker.setMap(null));
@@ -1394,6 +1515,7 @@
                     });
                 } catch (error) {
                     console.error('Map markers error:', error);
+                    this.updateFallbackMap();
                 }
             }
 
@@ -1427,6 +1549,19 @@
                             this.updateCardPosition(this.cardObjects[index], card);
                         }
                     });
+                    
+                    // Update map or fallback
+                    if (this.map && typeof google !== 'undefined') {
+                        const userLocation = { lat: this.userLat, lng: this.userLng };
+                        this.map.setCenter(userLocation);
+                        if (this.userMarker) {
+                            this.userMarker.setPosition(userLocation);
+                        }
+                    } else {
+                        this.updateFallbackMap();
+                    }
+                    
+                    this.addMapMarkers();
                 } catch (error) {
                     console.error('Position update error:', error);
                 }
@@ -1506,15 +1641,47 @@
             }
         }
 
+        // Global functions
         function initMap() {
-            console.log("Google Maps API loaded");
+            console.log("Google Maps API loaded successfully");
         }
 
+        // Initialize when page loads
         window.addEventListener('load', () => {
             try {
                 new WorldCupCardCollector();
             } catch (error) {
                 console.error('Failed to initialize World Cup Card Collector:', error);
+                // Show user-friendly error message
+                document.body.innerHTML = `
+                    <div style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        background: linear-gradient(135deg, #1a1a2e, #16213e);
+                        color: white;
+                        text-align: center;
+                        padding: 20px;
+                        font-family: Arial, sans-serif;
+                    ">
+                        <div>
+                            <h2 style="color: #FF6B35; margin-bottom: 15px;">⚽ Card Collector</h2>
+                            <p style="margin-bottom: 20px;">Something went wrong during initialization.</p>
+                            <button onclick="window.location.reload()" style="
+                                background: linear-gradient(45deg, #FF6B35, #F7931E);
+                                color: white;
+                                border: none;
+                                padding: 12px 24px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                            ">
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
+                `;
             }
         });
     </script>
