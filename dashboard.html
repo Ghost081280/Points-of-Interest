@@ -1657,6 +1657,17 @@
                 document.getElementById('canvas').style.display = 'block';
                 document.getElementById('albumView').style.display = 'none';
                 
+                // Show 3D soccer ball animation
+                const soccerBall = document.getElementById('soccerBall3D');
+                if (soccerBall) {
+                    soccerBall.style.display = 'block';
+                    
+                    // Hide soccer ball after 3 seconds
+                    setTimeout(() => {
+                        soccerBall.style.display = 'none';
+                    }, 3000);
+                }
+                
                 if (!this.animationStarted) {
                     this.animate();
                     this.animationStarted = true;
