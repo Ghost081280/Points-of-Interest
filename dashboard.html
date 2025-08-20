@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+<!-- Login Screen -->
+        <div class="login-screen" id="loginScreen">
+            <div class="login-container">
+                <div class="login-logo"><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -451,6 +454,32 @@
             font-size: 14px;
             font-weight: 700;
             color: #FF6B35;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Pulsing green circle for positive status */
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulseGreen 2s ease-in-out infinite;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+        }
+
+        @keyframes pulseGreen {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+                box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+            }
+            50% { 
+                transform: scale(1.2);
+                opacity: 0.8;
+                box-shadow: 0 0 16px rgba(76, 175, 80, 0.6);
+            }
         }
 
         .status-value.error {
@@ -946,7 +975,118 @@
             transform: translate(-50%, -50%) scale(0.95);
         }
 
-        /* Loading Overlay */
+        /* Login Screen */
+        .login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 20px;
+            padding: 40px 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.4);
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .login-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #FF6B35;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .login-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .login-button {
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .login-button:active {
+            transform: scale(0.98);
+        }
+
+        .login-demo-note {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(255, 107, 53, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 107, 53, 0.2);
+        }
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -2114,11 +2254,21 @@
                 console.log('🚪 Logging out...');
                 try {
                     this.stopCamera();
+                    // Clear session data
                     sessionStorage.removeItem('worldCupSession');
-                    window.location.reload(); // Just reload instead of redirecting
+                    localStorage.removeItem('collectedWorldCupCards'); // Optional: keep or remove user's cards
+                    
+                    // Show logout confirmation
+                    this.updateStatus('👋 Logged out successfully!');
+                    
+                    // Redirect to login screen
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
                 } catch (error) {
                     console.error('❌ Logout error:', error);
-                    window.location.reload();
+                    // Fallback redirect
+                    window.location.href = 'index.html';
                 }
             }
 
@@ -2525,8 +2675,16 @@
                 try {
                     const status = document.getElementById('status');
                     if (status) {
-                        status.textContent = message;
-                        status.className = isError ? 'status-value error' : 'status-value';
+                        // Check if this is a positive status message
+                        const isPositive = message.includes('✅') || message.includes('Ready') || message.includes('success');
+                        
+                        if (isPositive && !isError) {
+                            status.innerHTML = `<span class="status-indicator"></span>${message.replace('✅ ', '')}`;
+                            status.className = 'status-value';
+                        } else {
+                            status.textContent = message;
+                            status.className = isError ? 'status-value error' : 'status-value';
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Status update error:', error);
