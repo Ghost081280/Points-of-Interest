@@ -63,6 +63,55 @@
             z-index: 1;
         }
 
+        /* Status Indicator - Enhanced with pulsing dot */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            min-width: 8px;
+            min-height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: statusPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            flex-shrink: 0;
+        }
+
+        .status-dot.error {
+            background: #f44336;
+            animation: errorPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+        }
+
+        @keyframes statusPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
+        }
+
+        @keyframes errorPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(244, 67, 54, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+            }
+        }
+
         /* AR Soccer Ball - Properly styled and positioned */
         .ar-soccer-ball {
             position: absolute;
@@ -776,25 +825,59 @@
             margin-bottom: 24px;
         }
 
+        /* Enhanced card slot with flip animation */
         .album-card-slot {
             aspect-ratio: 3/4;
             border-radius: 10px;
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
             position: relative;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(10px);
             min-height: 120px;
+            perspective: 1000px;
         }
 
-        .album-card-slot.collected {
+        .card-flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .album-card-slot.flipped .card-flip-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-flip-front, .card-flip-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-flip-front {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .album-card-slot.collected .card-flip-front {
             border: 2px solid #FFD700;
             background: linear-gradient(135deg, #FF6B35, #F7931E);
             box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .card-flip-back {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid #FFD700;
+            transform: rotateY(180deg);
+            padding: 8px;
+            color: white;
         }
 
         .album-card-slot:active {
@@ -805,6 +888,13 @@
             text-align: center;
             color: white;
             padding: 6px;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .card-slot-number {
@@ -842,6 +932,39 @@
             font-size: 8px;
             font-weight: 700;
             border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .card-back-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 4px;
+        }
+
+        .card-back-name {
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.2;
+            color: white;
+        }
+
+        .card-back-team {
+            font-size: 8px;
+            opacity: 0.8;
+            text-align: center;
+            color: #FF6B35;
+        }
+
+        .card-back-position {
+            font-size: 7px;
+            background: rgba(255, 107, 53, 0.3);
+            color: #FF6B35;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
         }
 
         /* Bottom Navigation - Fixed Height */
@@ -1119,6 +1242,81 @@
             color: #FF6B35;
         }
 
+        /* Logout confirmation overlay */
+        .logout-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 400;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .logout-modal {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.98), rgba(22, 33, 62, 0.98));
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 320px;
+            width: 100%;
+            border: 1px solid rgba(255, 107, 53, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .logout-modal-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .logout-modal-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .logout-modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .logout-modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            min-height: 48px;
+        }
+
+        .logout-modal-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logout-modal-confirm {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.8), rgba(244, 67, 54, 0.6));
+            color: white;
+            border: 1px solid rgba(244, 67, 54, 0.4);
+        }
+
+        .logout-modal-btn:active {
+            transform: scale(0.98);
+        }
+
         /* Responsive Design */
         @media (max-width: 380px) {
             .navigation {
@@ -1188,8 +1386,6 @@
             .ar-instructions {
                 top: calc(env(safe-area-inset-top, 8px) + 180px);
             }
-
-            /* Remove all the old logout button positioning rules since it's now inline */
         }
 
         @media (max-height: 640px) {
@@ -1219,8 +1415,6 @@
             .ar-instructions {
                 top: calc(env(safe-area-inset-top, 8px) + 170px);
             }
-
-            /* Remove old logout positioning */
         }
 
         /* Safe area optimizations */
@@ -1236,11 +1430,7 @@
             .menu-header {
                 padding-top: calc(max(env(safe-area-inset-top), 8px) + 16px);
             }
-            
-            /* Remove old logout positioning rules */
         }
-
-        /* Remove old logout positioning rules for iPhone models */
 
         /* Accessibility */
         @media (prefers-reduced-motion: reduce) {
@@ -1256,7 +1446,8 @@
         .menu-item,
         .card-action-btn,
         .filter-btn,
-        .ar-soccer-ball {
+        .ar-soccer-ball,
+        .album-card-slot {
             contain: layout style paint;
             touch-action: manipulation;
         }
@@ -1366,11 +1557,23 @@
                     <div class="menu-item-text">Help & Support</div>
                 </div>
                 
-                <!-- Logout Button moved up here -->
+                <!-- Logout Button -->
                 <div style="padding: 16px;">
                     <button class="logout-button" id="sideMenuLogout">
                         🚪 Sign Out
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logout Confirmation Modal -->
+        <div class="logout-overlay" id="logoutOverlay">
+            <div class="logout-modal">
+                <div class="logout-modal-title">🚪 Sign Out</div>
+                <div class="logout-modal-text">Are you sure you want to sign out? Your collection progress will be saved.</div>
+                <div class="logout-modal-actions">
+                    <button class="logout-modal-btn logout-modal-cancel" id="cancelLogout">Cancel</button>
+                    <button class="logout-modal-btn logout-modal-confirm" id="confirmLogout">Sign Out</button>
                 </div>
             </div>
         </div>
@@ -1380,7 +1583,12 @@
             <div class="status-grid">
                 <div class="status-item">
                     <div class="status-label">Status</div>
-                    <div class="status-value" id="status">Ready to start!</div>
+                    <div class="status-value" id="status">
+                        <div class="status-indicator">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="statusText">Ready to start!</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="status-item">
                     <div class="status-label">Cards Found</div>
@@ -1701,11 +1909,13 @@
                         { id: 'homeBtn', event: 'click', handler: () => this.goHome() },
                         { id: 'menuToggle', event: 'click', handler: () => this.toggleMenu() },
                         { id: 'menuOverlay', event: 'click', handler: () => this.closeMenu() },
-                        { id: 'sideMenuLogout', event: 'click', handler: () => this.logout() },
+                        { id: 'sideMenuLogout', event: 'click', handler: () => this.showLogoutConfirmation() },
                         { id: 'collectCardBtn', event: 'click', handler: () => this.collectCard() },
                         { id: 'skipCardBtn', event: 'click', handler: () => this.skipCard() },
                         { id: 'arSoccerBall', event: 'click', handler: () => this.onSoccerBallClick() },
-                        { id: 'collectionBadge', event: 'click', handler: () => this.switchMode('album') }
+                        { id: 'collectionBadge', event: 'click', handler: () => this.switchMode('album') },
+                        { id: 'cancelLogout', event: 'click', handler: () => this.hideLogoutConfirmation() },
+                        { id: 'confirmLogout', event: 'click', handler: () => this.logout() }
                     ];
                     
                     handlers.forEach(({ id, event, handler }) => {
@@ -1758,7 +1968,7 @@
 
             addHapticFeedback() {
                 try {
-                    const interactiveElements = document.querySelectorAll('.nav-tab, .card-action-btn, .filter-btn, .menu-item, .ar-soccer-ball');
+                    const interactiveElements = document.querySelectorAll('.nav-tab, .card-action-btn, .filter-btn, .menu-item, .ar-soccer-ball, .album-card-slot');
                     
                     interactiveElements.forEach(element => {
                         element.addEventListener('touchstart', () => {
@@ -1859,6 +2069,44 @@
                     });
                 } catch (error) {
                     console.error('❌ Menu state update error:', error);
+                }
+            }
+
+            showLogoutConfirmation() {
+                try {
+                    const overlay = document.getElementById('logoutOverlay');
+                    if (overlay) {
+                        overlay.style.display = 'flex';
+                        this.closeMenu();
+                    }
+                } catch (error) {
+                    console.error('❌ Logout confirmation error:', error);
+                }
+            }
+
+            hideLogoutConfirmation() {
+                try {
+                    const overlay = document.getElementById('logoutOverlay');
+                    if (overlay) {
+                        overlay.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('❌ Hide logout confirmation error:', error);
+                }
+            }
+
+            logout() {
+                console.log('🚪 Logging out...');
+                try {
+                    this.stopCamera();
+                    sessionStorage.removeItem('worldCupSession');
+                    
+                    // Navigate to login page instead of reloading
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('❌ Logout error:', error);
+                    // Fallback to index.html
+                    window.location.href = 'index.html';
                 }
             }
 
@@ -2110,18 +2358,6 @@
                 }
             }
 
-            logout() {
-                console.log('🚪 Logging out...');
-                try {
-                    this.stopCamera();
-                    sessionStorage.removeItem('worldCupSession');
-                    window.location.reload(); // Just reload instead of redirecting
-                } catch (error) {
-                    console.error('❌ Logout error:', error);
-                    window.location.reload();
-                }
-            }
-
             initializeAlbum() {
                 console.log('📚 Initializing album...');
                 try {
@@ -2136,21 +2372,41 @@
                         slot.dataset.cardId = card.id;
                         slot.dataset.rarity = card.rarity;
                         
+                        // Create flip structure
+                        slot.innerHTML = `
+                            <div class="card-flip-inner">
+                                <div class="card-flip-front">
+                                    <div class="card-slot-content">
+                                        ${this.collectedCards.has(card.id) ? `
+                                            <div class="card-mini-flag">${card.flag}</div>
+                                            <div class="card-mini-rating">${card.rating}</div>
+                                            <div class="card-slot-icon">${card.photo}</div>
+                                        ` : `
+                                            <div class="card-slot-number">#${card.id}</div>
+                                            <div class="card-slot-icon">❓</div>
+                                        `}
+                                    </div>
+                                </div>
+                                <div class="card-flip-back">
+                                    <div class="card-back-content">
+                                        <div class="card-back-name">${card.name}</div>
+                                        <div class="card-back-team">${card.team}</div>
+                                        <div class="card-back-position">${card.position}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Add click handler for flip
                         if (this.collectedCards.has(card.id)) {
-                            slot.innerHTML = `
-                                <div class="card-slot-content">
-                                    <div class="card-mini-flag">${card.flag}</div>
-                                    <div class="card-mini-rating">${card.rating}</div>
-                                    <div class="card-slot-icon">${card.photo}</div>
-                                </div>
-                            `;
-                        } else {
-                            slot.innerHTML = `
-                                <div class="card-slot-content">
-                                    <div class="card-slot-number">#${card.id}</div>
-                                    <div class="card-slot-icon">❓</div>
-                                </div>
-                            `;
+                            slot.addEventListener('click', () => {
+                                slot.classList.toggle('flipped');
+                                
+                                // Haptic feedback
+                                if (navigator.vibrate) {
+                                    navigator.vibrate(15);
+                                }
+                            });
                         }
                         
                         albumGrid.appendChild(slot);
@@ -2223,6 +2479,11 @@
                         
                         this.hideCardDiscovery();
                         this.currentDiscoveredCard = null;
+                        
+                        // Refresh album if we're in album mode
+                        if (this.currentMode === 'album') {
+                            this.initializeAlbum();
+                        }
                         
                         // Show another soccer ball after delay in AR mode
                         if (this.currentMode === 'ar') {
@@ -2510,23 +2771,28 @@
                     const arTab = document.getElementById('arTab');
                     if (arTab) arTab.classList.remove('disabled');
                     
-                    this.updateStatus("✅ Ready! Start hunting for World Cup cards!");
+                    this.updateStatus("Ready! Start hunting for World Cup cards!", false);
                     this.showLoading(false);
                     
                     console.log('✅ Application started successfully');
                 } catch (error) {
                     console.error('❌ Start error:', error);
-                    this.updateStatus(`❌ Error: ${error.message}`, true);
+                    this.updateStatus(`Error: ${error.message}`, true);
                     this.showLoading(false);
                 }
             }
             
             updateStatus(message, isError = false) {
                 try {
-                    const status = document.getElementById('status');
-                    if (status) {
-                        status.textContent = message;
-                        status.className = isError ? 'status-value error' : 'status-value';
+                    const statusText = document.getElementById('statusText');
+                    const statusDot = document.getElementById('statusDot');
+                    
+                    if (statusText) {
+                        statusText.textContent = message;
+                    }
+                    
+                    if (statusDot) {
+                        statusDot.className = isError ? 'status-dot error' : 'status-dot';
                     }
                 } catch (error) {
                     console.error('❌ Status update error:', error);
