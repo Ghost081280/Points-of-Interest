@@ -320,11 +320,10 @@
         }
 
         .menu-footer {
-            padding: 12px 20px calc(env(safe-area-inset-bottom, 16px) + 16px) 20px;
+            padding: 20px 20px 40px 20px; /* Much more bottom padding */
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0; /* Don't shrink */
-            background: rgba(0, 0, 0, 0.3); /* Slight background to distinguish */
-            margin-bottom: env(safe-area-inset-bottom, 0px); /* Extra margin for iOS */
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .logout-button {
@@ -998,38 +997,18 @@
             }
         }
 
-        /* Enhanced safe area support for iOS */
+        /* Enhanced safe area support for iOS - Simplified */
         @supports (padding: max(0px)) {
-            .side-menu {
-                height: 100vh;
-                height: calc(100vh - env(safe-area-inset-bottom, 0px)); /* Account for bottom safe area */
-                padding-bottom: env(safe-area-inset-bottom, 0px);
-            }
-            
-            .menu-header {
-                padding-top: calc(env(safe-area-inset-top, 60px) + 8px);
-            }
-            
             .menu-footer {
-                padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 20px);
-                margin-bottom: 0; /* Remove margin when using calc */
+                padding-bottom: 50px; /* Simple, large padding */
             }
         }
 
-        /* iOS specific fixes */
+        /* iOS specific fixes - Simplified */
         @supports (-webkit-touch-callout: none) {
-            .side-menu {
-                height: calc(100vh - env(safe-area-inset-bottom, 0px));
-                padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-            }
-            
             .menu-footer {
-                padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 24px);
+                padding-bottom: 60px; /* Even more padding for iOS */
                 background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.3));
-            }
-            
-            .logout-button {
-                margin-bottom: 8px; /* Extra space above home indicator */
             }
         }
         /* Mobile menu optimizations */
@@ -1059,24 +1038,15 @@
             }
             
             .menu-footer {
-                padding: 8px 16px calc(env(safe-area-inset-bottom, 12px) + 20px) 16px;
+                padding: 16px 16px 60px 16px; /* Even more bottom padding on mobile */
             }
         }
 
-        /* iPhone specific adjustments */
+        /* iPhone specific adjustments - Simplified */
         @media (max-width: 480px) and (-webkit-touch-callout: none) {
-            .side-menu {
-                height: calc(100vh - env(safe-area-inset-bottom, 0px) - 8px);
-            }
-            
             .menu-footer {
-                padding-bottom: calc(env(safe-area-inset-bottom, 12px) + 28px);
+                padding-bottom: 70px; /* Extra high for iPhone */
                 background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.3));
-            }
-            
-            .logout-button {
-                margin-bottom: 12px;
-                box-shadow: 0 4px 16px rgba(244, 67, 54, 0.3);
             }
         }
 
@@ -1093,6 +1063,10 @@
             
             .menu-section {
                 padding: 8px 20px 4px 20px;
+            }
+            
+            .menu-footer {
+                padding: 12px 20px 50px 20px; /* Still high padding on short screens */
             }
             
             .logout-button {
