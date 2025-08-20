@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Explorer - Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            display: none;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            display: none;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Header UI */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 15;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
+            padding: 15px 20px 30px 20px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo-small {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4CAF50, #2196F3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .app-title-small {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-email {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Status UI */
+        .status-panel {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            color: white;
+            font-size: 14px;
+            max-height: 120px;
+            overflow: hidden;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .status-label {
+            font-size: 11px;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .error {
+            color: #f44336 !important;
+        }
+
+        /* POI Info */
+        .poi-info {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            display: none;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .poi-info.show {
+            display: block;
+            transform: translateY(0);
+        }
+
+        .poi-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .poi-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4CAF50, #2196F3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .poi-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .poi-distance {
+            margin-left: auto;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #4CAF50;
+        }
+
+        .poi-description {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .poi-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .poi-action-btn {
+            flex: 1;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .poi-action-btn:hover {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 12px;
+        }
+
+        .control-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-color: #4CAF50;
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .control-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-icon {
+            font-size: 18px;
+        }
+
+        /* Mode Indicator */
+        .mode-indicator {
+            position: absolute;
+            top: 160px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .ar-mode {
+            background: rgba(76, 175, 80, 0.9) !important;
+            border-color: rgba(76, 175, 80, 0.5) !important;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .map-mode {
+            background: rgba(33, 150, 243, 0.9) !important;
+            border-color: rgba(33, 150, 243, 0.5) !important;
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+        }
+
+        /* Logo Container */
+        .logo-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            display: none;
+            text-align: center;
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid rgba(76, 175, 80, 0.3);
+            animation: logoAppear 0.5s ease;
+        }
+
+        @keyframes logoAppear {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .client-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #4CAF50, #2196F3);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .logo-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Start Button */
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 11;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .start-button:hover {
+            transform: translate(-50%, -50%) translateY(-3px);
+            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Loading State */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            color: white;
+            font-size: 18px;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #4CAF50;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .header {
+                padding: 10px 15px 25px 15px;
+            }
+            
+            .app-title-small {
+                font-size: 16px;
+            }
+            
+            .status-panel {
+                top: 70px;
+                left: 15px;
+                right: 15px;
+                padding: 12px;
+            }
+            
+            .controls {
+                left: 15px;
+                right: 15px;
+                gap: 8px;
+            }
+            
+            .control-btn {
+                padding: 14px;
+                font-size: 14px;
+            }
+        }
+
+        /* Hide scrollbars but keep functionality */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <span>Initializing AR Experience...</span>
+        </div>
+
+        <button id="startBtn" class="start-button">🚀 Start AR Experience</button>
+        
+        <div class="header">
+            <div class="header-content">
+                <div class="app-info">
+                    <div class="app-logo-small">AR</div>
+                    <div class="app-title-small">AR Explorer</div>
+                </div>
+                <div class="user-info">
+                    <span class="user-email" id="userEmail">user@example.com</span>
+                    <button class="logout-btn" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
+        
+        <div class="mode-indicator map-mode" id="modeIndicator">
+            <span class="control-icon">🗺️</span> MAP MODE
+        </div>
+        
+        <div class="logo-container" id="logoContainer">
+            <div class="client-logo" id="clientLogo">AR</div>
+            <div class="logo-text">Welcome to AR Mode</div>
+            <div class="logo-subtext">Point your camera around to explore</div>
+        </div>
+        
+        <div class="status-panel" id="statusPanel">
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Status</div>
+                    <div class="status-value" id="status">Loading GPS...</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">POIs Found</div>
+                    <div class="status-value" id="poiCount">0</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Location</div>
+                    <div class="status-value">
+                        <span id="lat">--</span>, <span id="lng">--</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Heading</div>
+                    <div class="status-value"><span id="heading">--</span>°</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="poiInfo" class="poi-info">
+            <div class="poi-header">
+                <div class="poi-icon" id="poiIcon">📍</div>
+                <div class="poi-title" id="poiName"></div>
+                <div class="poi-distance"><span id="poiDistance"></span>m away</div>
+            </div>
+            <div class="poi-description" id="poiDescription"></div>
+            <div class="poi-actions">
+                <button class="poi-action-btn">📱 Get Directions</button>
+                <button class="poi-action-btn">ℹ️ More Info</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="mapBtn" class="control-btn active">
+                <span class="control-icon">🗺️</span>
+                <span>Map View</span>
+            </button>
+            <button id="arBtn" class="control-btn" disabled>
+                <span class="control-icon">📱</span>
+                <span>AR View</span>
+            </button>
+        </div>
+    </div>
+
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    </script>
+
+    <script>
+        class ARDashboard {
+            constructor() {
+                this.userLat = null;
+                this.userLng = null;
+                this.heading = 0;
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.pois = [];
+                this.poiObjects = [];
+                this.mapMarkers = [];
+                this.isStarted = false;
+                this.isARMode = false;
+                this.map = null;
+                this.userMarker = null;
+                this.animationStarted = false;
+
+                this.samplePOIs = [
+                    { name: "Coffee Shop", description: "Great coffee and pastries. Perfect for a morning boost!", type: "food", color: 0x8B4513, icon: "☕" },
+                    { name: "Central Park", description: "Beautiful green space with walking trails and benches.", type: "nature", color: 0x228B22, icon: "🌳" },
+                    { name: "History Museum", description: "Local history and cultural artifacts on display.", type: "culture", color: 0x4169E1, icon: "🏛️" },
+                    { name: "Italian Bistro", description: "Authentic Italian cuisine with outdoor seating.", type: "food", color: 0xFF6347, icon: "🍽️" },
+                    { name: "Tech Store", description: "Latest gadgets and electronics available here.", type: "shopping", color: 0xFF1493, icon: "🏪" },
+                    { name: "Fitness Center", description: "Modern gym with all the latest equipment.", type: "health", color: 0xFF8C00, icon: "💪" },
+                ];
+
+                this.init();
+            }
+
+            init() {
+                this.checkSession();
+                this.loadUserInfo();
+                this.setupEventListeners();
+            }
+
+            checkSession() {
+                const session = sessionStorage.getItem('arSession');
+                if (!session) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                const sessionData = JSON.parse(session);
+                const loginTime = new Date(sessionData.loginTime);
+                const now = new Date();
+                const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+                
+                if (hoursDiff > 24) {
+                    sessionStorage.removeItem('arSession');
+                    window.location.href = 'index.html';
+                    return;
+                }
+            }
+
+            loadUserInfo() {
+                const session = sessionStorage.getItem('arSession');
+                if (session) {
+                    const sessionData = JSON.parse(session);
+                    document.getElementById('userEmail').textContent = sessionData.email;
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('mapBtn').addEventListener('click', () => this.switchToMap());
+                document.getElementById('arBtn').addEventListener('click', () => this.switchToAR());
+                document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+            }
+
+            logout() {
+                sessionStorage.removeItem('arSession');
+                window.location.href = 'index.html';
+            }
+
+            showLoading(show = true) {
+                document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+            }
+
+            async start() {
+                if (this.isStarted) return;
+                this.isStarted = true;
+
+                document.getElementById('startBtn').style.display = 'none';
+                this.showLoading(true);
+                
+                try {
+                    await this.setupGPS();
+                    this.initializeMap();
+                    await this.setupCamera();
+                    this.setupThreeJS();
+                    this.setupDeviceOrientation();
+                    this.generateNearbyPOIs();
+                    
+                    document.getElementById('arBtn').disabled = false;
+                    this.updateStatus("✅ Ready! Switch between Map and AR views");
+                    this.showLoading(false);
+                } catch (error) {
+                    this.updateStatus(`❌ Error: ${error.message}`, true);
+                    this.showLoading(false);
+                }
+            }
+
+            initializeMap() {
+                const defaultLocation = { lat: 40.7589, lng: -73.9851 };
+                const mapLocation = this.userLat ? { lat: this.userLat, lng: this.userLng } : defaultLocation;
+
+                this.map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 16,
+                    center: mapLocation,
+                    mapTypeId: 'roadmap',
+                    styles: [
+                        {
+                            featureType: 'poi',
+                            stylers: [{ visibility: 'off' }]
+                        },
+                        {
+                            featureType: 'water',
+                            elementType: 'geometry',
+                            stylers: [{ color: '#193341' }]
+                        },
+                        {
+                            featureType: 'landscape',
+                            elementType: 'geometry',
+                            stylers: [{ color: '#2c5aa0' }]
+                        }
+                    ]
+                });
+
+                this.userMarker = new google.maps.Marker({
+                    position: mapLocation,
+                    map: this.map,
+                    title: 'Your Location',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 10,
+                        fillColor: '#4CAF50',
+                        fillOpacity: 1,
+                        strokeColor: '#fff',
+                        strokeWeight: 3
+                    }
+                });
+
+                if (this.userLat) {
+                    this.updateMapLocation();
+                }
+            }
+
+            updateMapLocation() {
+                if (!this.map || !this.userLat) return;
+
+                const userLocation = { lat: this.userLat, lng: this.userLng };
+                this.map.setCenter(userLocation);
+                this.userMarker.setPosition(userLocation);
+            }
+
+            addMapMarkers() {
+                this.mapMarkers.forEach(marker => marker.setMap(null));
+                this.mapMarkers = [];
+
+                this.pois.forEach(poi => {
+                    const marker = new google.maps.Marker({
+                        position: { lat: poi.lat, lng: poi.lng },
+                        map: this.map,
+                        title: poi.name,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 15,
+                            fillColor: `#${poi.color.toString(16).padStart(6, '0')}`,
+                            fillOpacity: 0.9,
+                            strokeColor: '#fff',
+                            strokeWeight: 3
+                        }
+                    });
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <div style="padding: 15px; max-width: 250px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <span style="font-size: 24px;">${poi.icon}</span>
+                                    <h3 style="margin: 0; color: #333; font-size: 18px;">${poi.name}</h3>
+                                </div>
+                                <p style="margin: 0 0 10px 0; color: #666; line-height: 1.4;">${poi.description}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 12px; color: #999;">
+                                        Distance: ${Math.round(poi.distance || 0)}m
+                                    </span>
+                                    <span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+                                        ${poi.type.toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+                        `
+                    });
+
+                    marker.addListener('click', () => {
+                        infoWindow.open(this.map, marker);
+                    });
+
+                    this.mapMarkers.push(marker);
+                });
+            }
+
+            switchToMap() {
+                this.isARMode = false;
+                document.getElementById('map').style.display = 'block';
+                document.getElementById('video').style.display = 'none';
+                document.getElementById('canvas').style.display = 'none';
+                document.getElementById('logoContainer').style.display = 'none';
+                document.getElementById('poiInfo').classList.remove('show');
+                
+                document.getElementById('mapBtn').classList.add('active');
+                document.getElementById('arBtn').classList.remove('active');
+                
+                const indicator = document.getElementById('modeIndicator');
+                indicator.innerHTML = '<span class="control-icon">🗺️</span> MAP MODE';
+                indicator.className = 'mode-indicator map-mode';
+                
+                this.updateMapLocation();
+            }
+
+            switchToAR() {
+                this.isARMode = true;
+                document.getElementById('map').style.display = 'none';
+                document.getElementById('video').style.display = 'block';
+                document.getElementById('canvas').style.display = 'block';
+                document.getElementById('logoContainer').style.display = 'block';
+                
+                document.getElementById('mapBtn').classList.remove('active');
+                document.getElementById('arBtn').classList.add('active');
+                
+                const indicator = document.getElementById('modeIndicator');
+                indicator.innerHTML = '<span class="control-icon">📱</span> AR MODE';
+                indicator.className = 'mode-indicator ar-mode';
+                
+                if (!this.animationStarted) {
+                    this.animate();
+                    this.animationStarted = true;
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('logoContainer').style.display = 'none';
+                }, 3000);
+            }
+
+            async setupCamera() {
+                const video = document.getElementById('video');
+                
+                const constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => resolve();
+                });
+            }
+
+            async setupGPS() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error("Geolocation not supported"));
+                        return;
+                    }
+
+                    const options = {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    };
+
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            this.userLat = position.coords.latitude;
+                            this.userLng = position.coords.longitude;
+                            
+                            document.getElementById('lat').textContent = this.userLat.toFixed(4);
+                            document.getElementById('lng').textContent = this.userLng.toFixed(4);
+                            
+                            navigator.geolocation.watchPosition(
+                                (pos) => this.updatePosition(pos),
+                                (error) => console.warn("GPS update error:", error),
+                                options
+                            );
+                            
+                            resolve();
+                        },
+                        (error) => {
+                            reject(new Error(`GPS Error: ${error.message}`));
+                        },
+                        options
+                    );
+                });
+            }
+
+            setupThreeJS() {
+                const canvas = document.getElementById('canvas');
+                
+                this.scene = new THREE.Scene();
+                
+                this.camera = new THREE.PerspectiveCamera(
+                    75, 
+                    window.innerWidth / window.innerHeight, 
+                    0.1, 
+                    1000
+                );
+                
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: canvas, 
+                    alpha: true 
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x000000, 0);
+
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                this.scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(0, 1, 0);
+                this.scene.add(directionalLight);
+
+                window.addEventListener('resize', () => this.onWindowResize());
+            }
+
+            setupDeviceOrientation() {
+                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response == 'granted') {
+                                window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
+                            }
+                        });
+                } else {
+                    window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
+                }
+            }
+
+            generateNearbyPOIs() {
+                const radius = 0.002; // Slightly larger radius for more spread
+                
+                this.samplePOIs.forEach((poiTemplate, index) => {
+                    const angle = (index / this.samplePOIs.length) * Math.PI * 2;
+                    const distance = radius * (0.3 + Math.random() * 0.7);
+                    
+                    const poi = {
+                        ...poiTemplate,
+                        lat: this.userLat + Math.cos(angle) * distance,
+                        lng: this.userLng + Math.sin(angle) * distance,
+                        id: index
+                    };
+                    
+                    this.pois.push(poi);
+                    this.createPOIObject(poi);
+                });
+
+                document.getElementById('poiCount').textContent = this.pois.length;
+                this.addMapMarkers();
+            }
+
+            createPOIObject(poi) {
+                const group = new THREE.Group();
+                
+                const geometry = new THREE.CylinderGeometry(2, 2, 8, 8);
+                const material = new THREE.MeshLambertMaterial({ color: poi.color });
+                const marker = new THREE.Mesh(geometry, material);
+                marker.position.y = 4;
+                group.add(marker);
+                
+                marker.userData.originalY = marker.position.y;
+                marker.userData.animationOffset = Math.random() * Math.PI * 2;
+                
+                const baseGeometry = new THREE.CylinderGeometry(3, 3, 1, 8);
+                const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                group.add(base);
+                
+                this.updatePOIPosition(group, poi);
+                
+                group.userData.poi = poi;
+                this.poiObjects.push(group);
+                this.scene.add(group);
+            }
+
+            updatePOIPosition(object, poi) {
+                const distance = this.calculateDistance(this.userLat, this.userLng, poi.lat, poi.lng);
+                const bearing = this.calculateBearing(this.userLat, this.userLng, poi.lat, poi.lng);
+                
+                const scaledDistance = Math.min(distance * 8, 120);
+                
+                const x = Math.sin(bearing) * scaledDistance;
+                const z = -Math.cos(bearing) * scaledDistance;
+                
+                object.position.set(x, 0, z);
+                poi.distance = distance;
+            }
+
+            updateOrientation(event) {
+                if (event.alpha !== null) {
+                    this.heading = event.alpha;
+                    document.getElementById('heading').textContent = Math.round(this.heading);
+                    
+                    const alpha = event.alpha * Math.PI / 180;
+                    const beta = event.beta * Math.PI / 180;
+                    const gamma = event.gamma * Math.PI / 180;
+                    
+                    this.camera.rotation.set(beta - Math.PI/2, alpha, -gamma);
+                }
+            }
+
+            updatePosition(position) {
+                this.userLat = position.coords.latitude;
+                this.userLng = position.coords.longitude;
+                
+                document.getElementById('lat').textContent = this.userLat.toFixed(4);
+                document.getElementById('lng').textContent = this.userLng.toFixed(4);
+                
+                this.pois.forEach((poi, index) => {
+                    this.updatePOIPosition(this.poiObjects[index], poi);
+                });
+                
+                this.updateMapLocation();
+                this.addMapMarkers();
+            }
+
+            calculateDistance(lat1, lng1, lat2, lng2) {
+                const R = 6371000;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                         Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            calculateBearing(lat1, lng1, lat2, lng2) {
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const lat1Rad = lat1 * Math.PI / 180;
+                const lat2Rad = lat2 * Math.PI / 180;
+                const y = Math.sin(dLng) * Math.cos(lat2Rad);
+                const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+                         Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng);
+                return Math.atan2(y, x);
+            }
+
+            animate() {
+                if (!this.isARMode) {
+                    requestAnimationFrame(() => this.animate());
+                    return;
+                }
+                
+                requestAnimationFrame(() => this.animate());
+                
+                const time = Date.now() * 0.001;
+                this.poiObjects.forEach(obj => {
+                    const marker = obj.children[0];
+                    if (marker.userData.originalY !== undefined) {
+                        marker.position.y = marker.userData.originalY + 
+                                          Math.sin(time + marker.userData.animationOffset) * 1.5;
+                    }
+                    obj.lookAt(this.camera.position);
+                });
+                
+                this.renderer.render(this.scene, this.camera);
+                this.checkNearbyPOIs();
+            }
+
+            checkNearbyPOIs() {
+                if (!this.isARMode) return;
+                
+                const nearbyPOI = this.pois.find(poi => poi.distance < 75);
+                
+                if (nearbyPOI && nearbyPOI !== this.currentPOI) {
+                    this.showPOIInfo(nearbyPOI);
+                    this.currentPOI = nearbyPOI;
+                } else if (!nearbyPOI && this.currentPOI) {
+                    this.hidePOIInfo();
+                    this.currentPOI = null;
+                }
+            }
+
+            showPOIInfo(poi) {
+                const infoDiv = document.getElementById('poiInfo');
+                document.getElementById('poiIcon').textContent = poi.icon;
+                document.getElementById('poiName').textContent = poi.name;
+                document.getElementById('poiDescription').textContent = poi.description;
+                document.getElementById('poiDistance').textContent = Math.round(poi.distance);
+                infoDiv.classList.add('show');
+            }
+
+            hidePOIInfo() {
+                document.getElementById('poiInfo').classList.remove('show');
+            }
+
+            updateStatus(message, isError = false) {
+                const status = document.getElementById('status');
+                status.textContent = message;
+                status.className = isError ? 'status-value error' : 'status-value';
+            }
+
+            onWindowResize() {
+                if (this.camera && this.renderer) {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            }
+        }
+
+        function initMap() {
+            console.log("Google Maps API loaded");
+        }
+
+        window.addEventListener('load', () => {
+            new ARDashboard();
+        });
+    </script>
+</body>
+</html>
