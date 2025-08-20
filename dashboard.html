@@ -320,7 +320,7 @@
         }
 
         .menu-footer {
-            padding: 20px 20px 40px 20px; /* Much more bottom padding */
+            padding: 20px 20px 100px 20px; /* Much higher bottom padding */
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             flex-shrink: 0;
             background: rgba(0, 0, 0, 0.3);
@@ -438,7 +438,7 @@
             box-shadow: 0 8px 32px rgba(156, 39, 176, 0.4);
         }
 
-        /* Card Discovery - Enhanced */
+        /* Card Discovery - Enhanced with soccer ball icon */
         .card-discovery {
             position: fixed;
             bottom: 100px;
@@ -465,17 +465,6 @@
             animation: cardSlideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes cardSlideUp {
-            from { 
-                opacity: 0; 
-                transform: translateY(100%) scale(0.9); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            }
-        }
-
         .card-discovery-header {
             text-align: center;
             margin-bottom: 20px;
@@ -487,6 +476,20 @@
             color: #FF6B35;
             margin-bottom: 8px;
             letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .card-found-icon {
+            font-size: 24px;
+            animation: bounce 0.6s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
 
         .card-rarity {
@@ -1000,14 +1003,14 @@
         /* Enhanced safe area support for iOS - Simplified */
         @supports (padding: max(0px)) {
             .menu-footer {
-                padding-bottom: 50px; /* Simple, large padding */
+                padding-bottom: 110px; /* Simple, large padding */
             }
         }
 
         /* iOS specific fixes - Simplified */
         @supports (-webkit-touch-callout: none) {
             .menu-footer {
-                padding-bottom: 60px; /* Even more padding for iOS */
+                padding-bottom: 120px; /* Even more padding for iOS */
                 background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.3));
             }
         }
@@ -1038,14 +1041,14 @@
             }
             
             .menu-footer {
-                padding: 16px 16px 60px 16px; /* Even more bottom padding on mobile */
+                padding: 16px 16px 120px 16px; /* Much higher bottom padding on mobile */
             }
         }
 
         /* iPhone specific adjustments - Simplified */
         @media (max-width: 480px) and (-webkit-touch-callout: none) {
             .menu-footer {
-                padding-bottom: 70px; /* Extra high for iPhone */
+                padding-bottom: 90px; /* Extra high for iPhone */
                 background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.3));
             }
         }
@@ -1373,7 +1376,10 @@
         <!-- Card Discovery -->
         <div id="cardDiscovery" class="card-discovery">
             <div class="card-discovery-header">
-                <div class="card-found-title">⚽ Player Card Found!</div>
+                <div class="card-found-title">
+                    <span class="card-found-icon">⚽</span>
+                    Player Card Found!
+                </div>
                 <div class="card-rarity" id="cardRarity">RARE</div>
             </div>
             <div class="card-preview">
@@ -1741,25 +1747,21 @@
                 document.getElementById('canvas').style.display = 'block';
                 document.getElementById('albumView').style.display = 'none';
                 
-                // Show 3D soccer ball animation with higher z-index
-                const soccerBall = document.getElementById('soccerBall3D');
-                if (soccerBall) {
-                    console.log('Showing soccer ball in AR mode'); // Debug log
-                    soccerBall.style.display = 'block';
-                    soccerBall.style.zIndex = '200'; // Ensure it's above everything
+                // Show AR instructions
+                const instructions = document.getElementById('arInstructions');
+                if (instructions) {
+                    instructions.classList.add('show');
                     
-                    // Hide soccer ball after 3 seconds with fade out
+                    // Hide instructions after 4 seconds
                     setTimeout(() => {
-                        soccerBall.style.opacity = '0';
-                        soccerBall.style.transition = 'opacity 0.5s ease';
-                        
-                        setTimeout(() => {
-                            soccerBall.style.display = 'none';
-                            soccerBall.style.opacity = '1'; // Reset for next time
-                            soccerBall.style.transition = '';
-                        }, 500);
-                    }, 3000);
+                        instructions.classList.remove('show');
+                    }, 4000);
                 }
+                
+                // Show tappable soccer ball in camera view after 2 seconds
+                setTimeout(() => {
+                    this.showTappableSoccerBall();
+                }, 2000);
                 
                 if (!this.animationStarted) {
                     this.animate();
@@ -1776,11 +1778,51 @@
                 this.initializeAlbum();
             }
 
+            showTappableSoccerBall() {
+                const soccerBall = document.getElementById('soccerBall3D');
+                if (soccerBall && this.currentMode === 'ar') {
+                    soccerBall.style.display = 'block';
+                    soccerBall.classList.add('tappable');
+                    
+                    // Add click handler for soccer ball
+                    const handleSoccerBallTap = () => {
+                        this.collectRandomCard();
+                        soccerBall.style.display = 'none';
+                        soccerBall.classList.remove('tappable');
+                        soccerBall.removeEventListener('click', handleSoccerBallTap);
+                        
+                        // Show another soccer ball after 10 seconds (for demo)
+                        setTimeout(() => {
+                            if (this.currentMode === 'ar') {
+                                this.showTappableSoccerBall();
+                            }
+                        }, 10000);
+                    };
+                    
+                    soccerBall.addEventListener('click', handleSoccerBallTap);
+                    
+                    // Add haptic feedback
+                    soccerBall.addEventListener('touchstart', () => {
+                        if (navigator.vibrate) {
+                            navigator.vibrate(20);
+                        }
+                    });
+                }
+            }
+
+            collectRandomCard() {
+                // Get a random uncollected card, or any card for demo
+                const uncollectedCards = this.worldCupCards.filter(card => !this.collectedCards.has(card.id));
+                const availableCards = uncollectedCards.length > 0 ? uncollectedCards : this.worldCupCards;
+                const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+                
+                // Show card discovery popup
+                this.showCardDiscovery(randomCard);
+            }
+
             hideCardDiscovery() {
                 document.getElementById('cardDiscovery')?.classList.remove('show');
             }
-
-            logout() {
                 sessionStorage.removeItem('worldCupSession');
                 window.location.href = 'index.html';
             }
@@ -2390,7 +2432,10 @@
                 }
             }
 
-            showLoading(show = true) {
+            logout() {
+                sessionStorage.removeItem('worldCupSession');
+                window.location.href = 'index.html';
+            }
                 const overlay = document.getElementById('loadingOverlay');
                 if (overlay) {
                     overlay.style.display = show ? 'flex' : 'none';
