@@ -384,7 +384,7 @@
             color: #f44336;
         }
 
-        /* Mode Indicator - Redesigned */
+        /* Mode Indicator - Hidden by default, only show in AR/Album modes */
         .mode-indicator {
             position: fixed;
             top: 170px;
@@ -398,11 +398,16 @@
             font-size: 13px;
             font-weight: 700;
             border: 2px solid transparent;
-            display: flex;
+            display: none; /* Hidden by default */
             align-items: center;
             gap: 8px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-indicator.ar-mode,
+        .mode-indicator.album-mode {
+            display: flex; /* Only show for AR and Album modes */
         }
 
         .mode-indicator.ar-mode {
@@ -412,9 +417,7 @@
         }
 
         .mode-indicator.map-mode {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(33, 150, 243, 0.4);
+            display: none !important; /* Never show for map mode */
         }
 
         .mode-indicator.album-mode {
@@ -1250,10 +1253,10 @@
             </div>
         </div>
 
-        <!-- Mode Indicator -->
-        <div class="mode-indicator map-mode" id="modeIndicator">
-            <span class="control-icon">🗺️</span>
-            <span>MAP MODE</span>
+        <!-- Mode Indicator - Only shows for AR Hunt and Collection modes -->
+        <div class="mode-indicator" id="modeIndicator" style="display: none;">
+            <span class="control-icon">📱</span>
+            <span>AR HUNT</span>
         </div>
         
         <!-- Album View -->
@@ -1623,16 +1626,18 @@
                 
                 switch (this.currentMode) {
                     case 'map':
-                        indicator.classList.add('map-mode');
-                        indicator.innerHTML = '<span class="control-icon">🗺️</span><span>MAP MODE</span>';
+                        // Hide indicator for map mode
+                        indicator.style.display = 'none';
                         break;
                     case 'ar':
                         indicator.classList.add('ar-mode');
                         indicator.innerHTML = '<span class="control-icon">📱</span><span>AR HUNT</span>';
+                        indicator.style.display = 'flex';
                         break;
                     case 'album':
                         indicator.classList.add('album-mode');
                         indicator.innerHTML = '<span class="control-icon">🃏</span><span>COLLECTION</span>';
+                        indicator.style.display = 'flex';
                         break;
                 }
             }
