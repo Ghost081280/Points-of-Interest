@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" width=device-width, initial-scale=1.0">
     <title>AR Explorer - Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
@@ -16,6 +16,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #000;
             overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         #container {
@@ -24,6 +26,7 @@
             height: 100vh;
         }
 
+        /* Base layers - lowest z-index */
         #video {
             position: absolute;
             top: 0;
@@ -55,116 +58,120 @@
             z-index: 1;
         }
 
-        /* Header UI */
+        /* Header - highest priority UI */
         .header {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 15;
-            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
-            padding: 15px 20px 30px 20px;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 70%, rgba(0,0,0,0.3) 100%);
+            padding: 10px 15px 20px 15px;
+            backdrop-filter: blur(10px);
         }
 
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            max-width: 100%;
         }
 
         .app-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .app-logo-small {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             background: linear-gradient(135deg, #4CAF50, #2196F3);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 14px;
             color: white;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            flex-shrink: 0;
         }
 
         .app-title-small {
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
         }
 
         .user-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
 
         .user-email {
             color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
+            font-size: 12px;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            flex-shrink: 0;
         }
 
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
         }
 
-        /* Status UI */
+        /* Status Panel */
         .status-panel {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            right: 20px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.85);
+            position: fixed;
+            top: 60px;
+            left: 15px;
+            right: 15px;
+            z-index: 90;
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 15px;
+            border-radius: 12px;
+            padding: 12px;
             color: white;
-            font-size: 14px;
-            max-height: 120px;
-            overflow: hidden;
+            font-size: 12px;
         }
 
         .status-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 10px;
         }
 
         .status-item {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
 
         .status-label {
-            font-size: 11px;
+            font-size: 10px;
             opacity: 0.7;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .status-value {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 600;
             color: #4CAF50;
         }
@@ -173,18 +180,47 @@
             color: #f44336 !important;
         }
 
+        /* Mode Indicator */
+        .mode-indicator {
+            position: fixed;
+            top: 140px;
+            right: 15px;
+            z-index: 90;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ar-mode {
+            background: rgba(76, 175, 80, 0.9) !important;
+            border-color: rgba(76, 175, 80, 0.5) !important;
+        }
+
+        .map-mode {
+            background: rgba(33, 150, 243, 0.9) !important;
+            border-color: rgba(33, 150, 243, 0.5) !important;
+        }
+
         /* POI Info */
         .poi-info {
-            position: absolute;
+            position: fixed;
             bottom: 80px;
-            left: 20px;
-            right: 20px;
-            z-index: 10;
+            left: 15px;
+            right: 15px;
+            z-index: 85;
             background: rgba(0, 0, 0, 0.9);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(76, 175, 80, 0.3);
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 15px;
             color: white;
             display: none;
             transform: translateY(20px);
@@ -199,44 +235,47 @@
         .poi-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: 10px;
+            margin-bottom: 8px;
         }
 
         .poi-icon {
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             background: linear-gradient(135deg, #4CAF50, #2196F3);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
         .poi-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
+            flex: 1;
         }
 
         .poi-distance {
-            margin-left: auto;
             background: rgba(76, 175, 80, 0.2);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 10px;
             color: #4CAF50;
+            flex-shrink: 0;
         }
 
         .poi-description {
             color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 15px;
-            line-height: 1.5;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            font-size: 13px;
         }
 
         .poi-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .poi-action-btn {
@@ -244,9 +283,9 @@
             background: rgba(76, 175, 80, 0.2);
             border: 1px solid rgba(76, 175, 80, 0.3);
             color: #4CAF50;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -255,15 +294,15 @@
             background: rgba(76, 175, 80, 0.3);
         }
 
-        /* Controls */
+        /* Controls - bottom layer */
         .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            z-index: 10;
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            z-index: 80;
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         .control-btn {
@@ -272,28 +311,26 @@
             backdrop-filter: blur(15px);
             color: white;
             border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 16px;
-            font-size: 16px;
+            padding: 14px;
+            font-size: 14px;
             font-weight: 600;
-            border-radius: 15px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .control-btn:hover {
             background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.4);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .control-btn.active {
             background: linear-gradient(135deg, #4CAF50, #45a049);
             border-color: #4CAF50;
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
         }
 
         .control-btn:disabled {
@@ -305,264 +342,261 @@
         }
 
         .control-icon {
-            font-size: 18px;
+            font-size: 16px;
         }
 
-        /* Mode Indicator */
-        .mode-indicator {
-            position: absolute;
-            top: 160px;
-            right: 20px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(15px);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .ar-mode {
-            background: rgba(76, 175, 80, 0.9) !important;
-            border-color: rgba(76, 175, 80, 0.5) !important;
-            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
-        }
-
-        .map-mode {
-            background: rgba(33, 150, 243, 0.9) !important;
-            border-color: rgba(33, 150, 243, 0.5) !important;
-            box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
-        }
-
-        /* Logo Container */
+        /* Logo Container - middle layer */
         .logo-container {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 5;
+            z-index: 70;
             display: none;
             text-align: center;
             color: white;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 20px;
+            padding: 25px;
+            border-radius: 15px;
             border: 2px solid rgba(76, 175, 80, 0.3);
-            animation: logoAppear 0.5s ease;
-        }
-
-        @keyframes logoAppear {
-            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         .client-logo {
-            width: 120px;
-            height: 120px;
+            width: 80px;
+            height: 80px;
             background: linear-gradient(135deg, #4CAF50, #2196F3);
             border-radius: 50%;
-            margin: 0 auto 20px;
+            margin: 0 auto 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
+            font-size: 32px;
             color: white;
             font-weight: bold;
-            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
         }
 
         .logo-text {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .logo-subtext {
-            font-size: 14px;
+            font-size: 12px;
             opacity: 0.8;
         }
 
-        /* Start Button */
+        /* Start Button - top layer */
         .start-button {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 11;
+            z-index: 110;
             background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
             border: none;
-            padding: 20px 40px;
-            font-size: 18px;
+            padding: 18px 35px;
+            font-size: 16px;
             font-weight: 600;
-            border-radius: 15px;
+            border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
             transition: all 0.3s ease;
         }
 
         .start-button:hover {
-            transform: translate(-50%, -50%) translateY(-3px);
-            box-shadow: 0 15px 40px rgba(76, 175, 80, 0.4);
+            transform: translate(-50%, -50%) translateY(-2px);
+            box-shadow: 0 12px 35px rgba(76, 175, 80, 0.4);
         }
 
-        /* Loading State */
+        /* Loading Overlay - highest layer */
         .loading-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.8);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
-            z-index: 20;
+            z-index: 120;
             color: white;
-            font-size: 18px;
-            display: none;
+            font-size: 16px;
+            backdrop-filter: blur(10px);
         }
 
         .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: #4CAF50;
             animation: spin 1s ease-in-out infinite;
-            margin-right: 15px;
+            margin-right: 12px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        /* Responsive Design */
+        /* Responsive adjustments */
         @media (max-width: 480px) {
             .header {
-                padding: 10px 15px 25px 15px;
+                padding: 8px 12px 15px 12px;
             }
             
             .app-title-small {
-                font-size: 16px;
+                font-size: 14px;
             }
             
             .status-panel {
-                top: 70px;
-                left: 15px;
-                right: 15px;
-                padding: 12px;
+                top: 50px;
+                left: 12px;
+                right: 12px;
+                padding: 10px;
             }
             
             .controls {
-                left: 15px;
-                right: 15px;
+                left: 12px;
+                right: 12px;
                 gap: 8px;
             }
             
             .control-btn {
-                padding: 14px;
-                font-size: 14px;
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .poi-info {
+                left: 12px;
+                right: 12px;
+                bottom: 70px;
+                padding: 12px;
+            }
+
+            .mode-indicator {
+                top: 120px;
+                right: 12px;
             }
         }
 
-        /* Hide scrollbars but keep functionality */
-        ::-webkit-scrollbar {
-            display: none;
+        /* Fix for overlapping content */
+        .ui-safe-area {
+            pointer-events: none;
+        }
+        
+        .ui-safe-area > * {
+            pointer-events: auto;
+        }
+
+        /* Ensure buttons are clickable */
+        button, .control-btn, .logout-btn, .poi-action-btn {
+            pointer-events: auto !important;
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
 <body>
     <div id="container">
+        <!-- Loading Overlay - Highest Z-Index -->
         <div class="loading-overlay" id="loadingOverlay">
             <div class="loading-spinner"></div>
             <span>Initializing AR Experience...</span>
         </div>
 
+        <!-- Start Button - High Z-Index -->
         <button id="startBtn" class="start-button">🚀 Start AR Experience</button>
         
-        <div class="header">
-            <div class="header-content">
-                <div class="app-info">
-                    <div class="app-logo-small">AR</div>
-                    <div class="app-title-small">AR Explorer</div>
-                </div>
-                <div class="user-info">
-                    <span class="user-email" id="userEmail">user@example.com</span>
-                    <button class="logout-btn" id="logoutBtn">Logout</button>
-                </div>
-            </div>
-        </div>
-        
+        <!-- Base Content Layers -->
         <div id="map"></div>
         <video id="video" autoplay muted playsinline></video>
         <canvas id="canvas"></canvas>
         
-        <div class="mode-indicator map-mode" id="modeIndicator">
-            <span class="control-icon">🗺️</span> MAP MODE
-        </div>
-        
-        <div class="logo-container" id="logoContainer">
-            <div class="client-logo" id="clientLogo">AR</div>
-            <div class="logo-text">Welcome to AR Mode</div>
-            <div class="logo-subtext">Point your camera around to explore</div>
-        </div>
-        
-        <div class="status-panel" id="statusPanel">
-            <div class="status-grid">
-                <div class="status-item">
-                    <div class="status-label">Status</div>
-                    <div class="status-value" id="status">Loading GPS...</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">POIs Found</div>
-                    <div class="status-value" id="poiCount">0</div>
-                </div>
-                <div class="status-item">
-                    <div class="status-label">Location</div>
-                    <div class="status-value">
-                        <span id="lat">--</span>, <span id="lng">--</span>
+        <!-- UI Safe Area Container -->
+        <div class="ui-safe-area">
+            <!-- Header - Highest UI Priority -->
+            <div class="header">
+                <div class="header-content">
+                    <div class="app-info">
+                        <div class="app-logo-small">AR</div>
+                        <div class="app-title-small">AR Explorer</div>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-email" id="userEmail">user@example.com</span>
+                        <button class="logout-btn" id="logoutBtn">Logout</button>
                     </div>
                 </div>
-                <div class="status-item">
-                    <div class="status-label">Heading</div>
-                    <div class="status-value"><span id="heading">--</span>°</div>
+            </div>
+            
+            <!-- Status Panel -->
+            <div class="status-panel" id="statusPanel">
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">Status</div>
+                        <div class="status-value" id="status">Loading GPS...</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">POIs Found</div>
+                        <div class="status-value" id="poiCount">0</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Location</div>
+                        <div class="status-value">
+                            <span id="lat">--</span>, <span id="lng">--</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Heading</div>
+                        <div class="status-value"><span id="heading">--</span>°</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div id="poiInfo" class="poi-info">
-            <div class="poi-header">
-                <div class="poi-icon" id="poiIcon">📍</div>
-                <div class="poi-title" id="poiName"></div>
-                <div class="poi-distance"><span id="poiDistance"></span>m away</div>
-            </div>
-            <div class="poi-description" id="poiDescription"></div>
-            <div class="poi-actions">
-                <button class="poi-action-btn">📱 Get Directions</button>
-                <button class="poi-action-btn">ℹ️ More Info</button>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button id="mapBtn" class="control-btn active">
+            <!-- Mode Indicator -->
+            <div class="mode-indicator map-mode" id="modeIndicator">
                 <span class="control-icon">🗺️</span>
-                <span>Map View</span>
-            </button>
-            <button id="arBtn" class="control-btn" disabled>
-                <span class="control-icon">📱</span>
-                <span>AR View</span>
-            </button>
+                <span>MAP</span>
+            </div>
+            
+            <!-- POI Info -->
+            <div id="poiInfo" class="poi-info">
+                <div class="poi-header">
+                    <div class="poi-icon" id="poiIcon">📍</div>
+                    <div class="poi-title" id="poiName"></div>
+                    <div class="poi-distance"><span id="poiDistance"></span>m</div>
+                </div>
+                <div class="poi-description" id="poiDescription"></div>
+                <div class="poi-actions">
+                    <button class="poi-action-btn">📱 Navigate</button>
+                    <button class="poi-action-btn">ℹ️ Info</button>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button id="mapBtn" class="control-btn active">
+                    <span class="control-icon">🗺️</span>
+                    <span>Map</span>
+                </button>
+                <button id="arBtn" class="control-btn" disabled>
+                    <span class="control-icon">📱</span>
+                    <span>AR</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Logo Container - Medium Z-Index -->
+        <div class="logo-container" id="logoContainer">
+            <div class="client-logo" id="clientLogo">AR</div>
+            <div class="logo-text">AR Mode Active</div>
+            <div class="logo-subtext">Look around to explore</div>
         </div>
     </div>
 
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
-    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
 
     <script>
         class ARDashboard {
@@ -581,23 +615,29 @@
                 this.map = null;
                 this.userMarker = null;
                 this.animationStarted = false;
+                this.currentPOI = null;
 
                 this.samplePOIs = [
-                    { name: "Coffee Shop", description: "Great coffee and pastries. Perfect for a morning boost!", type: "food", color: 0x8B4513, icon: "☕" },
-                    { name: "Central Park", description: "Beautiful green space with walking trails and benches.", type: "nature", color: 0x228B22, icon: "🌳" },
-                    { name: "History Museum", description: "Local history and cultural artifacts on display.", type: "culture", color: 0x4169E1, icon: "🏛️" },
-                    { name: "Italian Bistro", description: "Authentic Italian cuisine with outdoor seating.", type: "food", color: 0xFF6347, icon: "🍽️" },
-                    { name: "Tech Store", description: "Latest gadgets and electronics available here.", type: "shopping", color: 0xFF1493, icon: "🏪" },
-                    { name: "Fitness Center", description: "Modern gym with all the latest equipment.", type: "health", color: 0xFF8C00, icon: "💪" },
+                    { name: "Coffee Shop", description: "Great coffee and pastries nearby!", type: "food", color: 0x8B4513, icon: "☕" },
+                    { name: "Central Park", description: "Beautiful green space for relaxation.", type: "nature", color: 0x228B22, icon: "🌳" },
+                    { name: "History Museum", description: "Local history and cultural exhibits.", type: "culture", color: 0x4169E1, icon: "🏛️" },
+                    { name: "Italian Restaurant", description: "Authentic Italian cuisine.", type: "food", color: 0xFF6347, icon: "🍽️" },
+                    { name: "Tech Store", description: "Latest gadgets and electronics.", type: "shopping", color: 0xFF1493, icon: "🏪" },
+                    { name: "Gym", description: "Fitness center with modern equipment.", type: "health", color: 0xFF8C00, icon: "💪" },
                 ];
 
                 this.init();
             }
 
             init() {
-                this.checkSession();
-                this.loadUserInfo();
-                this.setupEventListeners();
+                try {
+                    this.checkSession();
+                    this.loadUserInfo();
+                    this.setupEventListeners();
+                } catch (error) {
+                    console.error('Initialization error:', error);
+                    this.updateStatus(`Init Error: ${error.message}`, true);
+                }
             }
 
             checkSession() {
@@ -607,31 +647,50 @@
                     return;
                 }
                 
-                const sessionData = JSON.parse(session);
-                const loginTime = new Date(sessionData.loginTime);
-                const now = new Date();
-                const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-                
-                if (hoursDiff > 24) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    const loginTime = new Date(sessionData.loginTime);
+                    const now = new Date();
+                    const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+                    
+                    if (hoursDiff > 24) {
+                        sessionStorage.removeItem('arSession');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Session error:', error);
                     sessionStorage.removeItem('arSession');
                     window.location.href = 'index.html';
-                    return;
                 }
             }
 
             loadUserInfo() {
                 const session = sessionStorage.getItem('arSession');
                 if (session) {
-                    const sessionData = JSON.parse(session);
-                    document.getElementById('userEmail').textContent = sessionData.email;
+                    try {
+                        const sessionData = JSON.parse(session);
+                        document.getElementById('userEmail').textContent = sessionData.email;
+                    } catch (error) {
+                        console.error('User info error:', error);
+                    }
                 }
             }
 
             setupEventListeners() {
-                document.getElementById('startBtn').addEventListener('click', () => this.start());
-                document.getElementById('mapBtn').addEventListener('click', () => this.switchToMap());
-                document.getElementById('arBtn').addEventListener('click', () => this.switchToAR());
-                document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+                try {
+                    const startBtn = document.getElementById('startBtn');
+                    const mapBtn = document.getElementById('mapBtn');
+                    const arBtn = document.getElementById('arBtn');
+                    const logoutBtn = document.getElementById('logoutBtn');
+
+                    if (startBtn) startBtn.addEventListener('click', () => this.start());
+                    if (mapBtn) mapBtn.addEventListener('click', () => this.switchToMap());
+                    if (arBtn) arBtn.addEventListener('click', () => this.switchToAR());
+                    if (logoutBtn) logoutBtn.addEventListener('click', () => this.logout());
+                } catch (error) {
+                    console.error('Event listener error:', error);
+                }
             }
 
             logout() {
@@ -640,14 +699,19 @@
             }
 
             showLoading(show = true) {
-                document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.style.display = show ? 'flex' : 'none';
+                }
             }
 
             async start() {
                 if (this.isStarted) return;
                 this.isStarted = true;
 
-                document.getElementById('startBtn').style.display = 'none';
+                const startBtn = document.getElementById('startBtn');
+                if (startBtn) startBtn.style.display = 'none';
+                
                 this.showLoading(true);
                 
                 try {
@@ -658,174 +722,205 @@
                     this.setupDeviceOrientation();
                     this.generateNearbyPOIs();
                     
-                    document.getElementById('arBtn').disabled = false;
+                    const arBtn = document.getElementById('arBtn');
+                    if (arBtn) arBtn.disabled = false;
+                    
                     this.updateStatus("✅ Ready! Switch between Map and AR views");
                     this.showLoading(false);
                 } catch (error) {
+                    console.error('Start error:', error);
                     this.updateStatus(`❌ Error: ${error.message}`, true);
                     this.showLoading(false);
                 }
             }
 
             initializeMap() {
-                const defaultLocation = { lat: 40.7589, lng: -73.9851 };
-                const mapLocation = this.userLat ? { lat: this.userLat, lng: this.userLng } : defaultLocation;
-
-                this.map = new google.maps.Map(document.getElementById('map'), {
-                    zoom: 16,
-                    center: mapLocation,
-                    mapTypeId: 'roadmap',
-                    styles: [
-                        {
-                            featureType: 'poi',
-                            stylers: [{ visibility: 'off' }]
-                        },
-                        {
-                            featureType: 'water',
-                            elementType: 'geometry',
-                            stylers: [{ color: '#193341' }]
-                        },
-                        {
-                            featureType: 'landscape',
-                            elementType: 'geometry',
-                            stylers: [{ color: '#2c5aa0' }]
-                        }
-                    ]
-                });
-
-                this.userMarker = new google.maps.Marker({
-                    position: mapLocation,
-                    map: this.map,
-                    title: 'Your Location',
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 10,
-                        fillColor: '#4CAF50',
-                        fillOpacity: 1,
-                        strokeColor: '#fff',
-                        strokeWeight: 3
+                try {
+                    const mapElement = document.getElementById('map');
+                    if (!mapElement || typeof google === 'undefined') {
+                        console.warn('Google Maps not available');
+                        return;
                     }
-                });
 
-                if (this.userLat) {
-                    this.updateMapLocation();
+                    const defaultLocation = { lat: 40.7589, lng: -73.9851 };
+                    const mapLocation = this.userLat ? { lat: this.userLat, lng: this.userLng } : defaultLocation;
+
+                    this.map = new google.maps.Map(mapElement, {
+                        zoom: 16,
+                        center: mapLocation,
+                        mapTypeId: 'roadmap',
+                        styles: [
+                            { featureType: 'poi', stylers: [{ visibility: 'off' }] }
+                        ]
+                    });
+
+                    this.userMarker = new google.maps.Marker({
+                        position: mapLocation,
+                        map: this.map,
+                        title: 'Your Location',
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: '#4CAF50',
+                            fillOpacity: 1,
+                            strokeColor: '#fff',
+                            strokeWeight: 3
+                        }
+                    });
+
+                    if (this.userLat) {
+                        this.updateMapLocation();
+                    }
+                } catch (error) {
+                    console.error('Map initialization error:', error);
                 }
             }
 
             updateMapLocation() {
                 if (!this.map || !this.userLat) return;
 
-                const userLocation = { lat: this.userLat, lng: this.userLng };
-                this.map.setCenter(userLocation);
-                this.userMarker.setPosition(userLocation);
+                try {
+                    const userLocation = { lat: this.userLat, lng: this.userLng };
+                    this.map.setCenter(userLocation);
+                    if (this.userMarker) {
+                        this.userMarker.setPosition(userLocation);
+                    }
+                } catch (error) {
+                    console.error('Map update error:', error);
+                }
             }
 
             addMapMarkers() {
-                this.mapMarkers.forEach(marker => marker.setMap(null));
-                this.mapMarkers = [];
+                if (!this.map) return;
 
-                this.pois.forEach(poi => {
-                    const marker = new google.maps.Marker({
-                        position: { lat: poi.lat, lng: poi.lng },
-                        map: this.map,
-                        title: poi.name,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 15,
-                            fillColor: `#${poi.color.toString(16).padStart(6, '0')}`,
-                            fillOpacity: 0.9,
-                            strokeColor: '#fff',
-                            strokeWeight: 3
-                        }
-                    });
+                try {
+                    // Clear existing markers
+                    this.mapMarkers.forEach(marker => marker.setMap(null));
+                    this.mapMarkers = [];
 
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                            <div style="padding: 15px; max-width: 250px;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                    <span style="font-size: 24px;">${poi.icon}</span>
-                                    <h3 style="margin: 0; color: #333; font-size: 18px;">${poi.name}</h3>
+                    this.pois.forEach(poi => {
+                        const marker = new google.maps.Marker({
+                            position: { lat: poi.lat, lng: poi.lng },
+                            map: this.map,
+                            title: poi.name,
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 12,
+                                fillColor: `#${poi.color.toString(16).padStart(6, '0')}`,
+                                fillOpacity: 0.9,
+                                strokeColor: '#fff',
+                                strokeWeight: 2
+                            }
+                        });
+
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `
+                                <div style="padding: 10px; max-width: 200px;">
+                                    <h3 style="margin: 0 0 5px 0; color: #333;">${poi.icon} ${poi.name}</h3>
+                                    <p style="margin: 0 0 5px 0; color: #666; font-size: 13px;">${poi.description}</p>
+                                    <small style="color: #999;">Distance: ${Math.round(poi.distance || 0)}m</small>
                                 </div>
-                                <p style="margin: 0 0 10px 0; color: #666; line-height: 1.4;">${poi.description}</p>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 12px; color: #999;">
-                                        Distance: ${Math.round(poi.distance || 0)}m
-                                    </span>
-                                    <span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">
-                                        ${poi.type.toUpperCase()}
-                                    </span>
-                                </div>
-                            </div>
-                        `
-                    });
+                            `
+                        });
 
-                    marker.addListener('click', () => {
-                        infoWindow.open(this.map, marker);
-                    });
+                        marker.addListener('click', () => {
+                            infoWindow.open(this.map, marker);
+                        });
 
-                    this.mapMarkers.push(marker);
-                });
+                        this.mapMarkers.push(marker);
+                    });
+                } catch (error) {
+                    console.error('Map markers error:', error);
+                }
             }
 
             switchToMap() {
                 this.isARMode = false;
-                document.getElementById('map').style.display = 'block';
-                document.getElementById('video').style.display = 'none';
-                document.getElementById('canvas').style.display = 'none';
-                document.getElementById('logoContainer').style.display = 'none';
-                document.getElementById('poiInfo').classList.remove('show');
                 
-                document.getElementById('mapBtn').classList.add('active');
-                document.getElementById('arBtn').classList.remove('active');
-                
+                const map = document.getElementById('map');
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const logoContainer = document.getElementById('logoContainer');
+                const poiInfo = document.getElementById('poiInfo');
+                const mapBtn = document.getElementById('mapBtn');
+                const arBtn = document.getElementById('arBtn');
                 const indicator = document.getElementById('modeIndicator');
-                indicator.innerHTML = '<span class="control-icon">🗺️</span> MAP MODE';
-                indicator.className = 'mode-indicator map-mode';
+
+                if (map) map.style.display = 'block';
+                if (video) video.style.display = 'none';
+                if (canvas) canvas.style.display = 'none';
+                if (logoContainer) logoContainer.style.display = 'none';
+                if (poiInfo) poiInfo.classList.remove('show');
+                
+                if (mapBtn) mapBtn.classList.add('active');
+                if (arBtn) arBtn.classList.remove('active');
+                
+                if (indicator) {
+                    indicator.innerHTML = '<span class="control-icon">🗺️</span><span>MAP</span>';
+                    indicator.className = 'mode-indicator map-mode';
+                }
                 
                 this.updateMapLocation();
             }
 
             switchToAR() {
                 this.isARMode = true;
-                document.getElementById('map').style.display = 'none';
-                document.getElementById('video').style.display = 'block';
-                document.getElementById('canvas').style.display = 'block';
-                document.getElementById('logoContainer').style.display = 'block';
                 
-                document.getElementById('mapBtn').classList.remove('active');
-                document.getElementById('arBtn').classList.add('active');
-                
+                const map = document.getElementById('map');
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const logoContainer = document.getElementById('logoContainer');
+                const mapBtn = document.getElementById('mapBtn');
+                const arBtn = document.getElementById('arBtn');
                 const indicator = document.getElementById('modeIndicator');
-                indicator.innerHTML = '<span class="control-icon">📱</span> AR MODE';
-                indicator.className = 'mode-indicator ar-mode';
+
+                if (map) map.style.display = 'none';
+                if (video) video.style.display = 'block';
+                if (canvas) canvas.style.display = 'block';
+                if (logoContainer) logoContainer.style.display = 'block';
+                
+                if (mapBtn) mapBtn.classList.remove('active');
+                if (arBtn) arBtn.classList.add('active');
+                
+                if (indicator) {
+                    indicator.innerHTML = '<span class="control-icon">📱</span><span>AR</span>';
+                    indicator.className = 'mode-indicator ar-mode';
+                }
                 
                 if (!this.animationStarted) {
                     this.animate();
                     this.animationStarted = true;
                 }
                 
+                // Hide logo after 2.5 seconds
                 setTimeout(() => {
-                    document.getElementById('logoContainer').style.display = 'none';
-                }, 3000);
+                    if (logoContainer) logoContainer.style.display = 'none';
+                }, 2500);
             }
 
             async setupCamera() {
-                const video = document.getElementById('video');
-                
-                const constraints = {
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
+                try {
+                    const video = document.getElementById('video');
+                    if (!video) throw new Error('Video element not found');
+                    
+                    const constraints = {
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    };
 
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = stream;
-                
-                return new Promise((resolve) => {
-                    video.onloadedmetadata = () => resolve();
-                });
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = stream;
+                    
+                    return new Promise((resolve) => {
+                        video.onloadedmetadata = () => resolve();
+                    });
+                } catch (error) {
+                    console.error('Camera setup error:', error);
+                    throw new Error('Camera access denied or not available');
+                }
             }
 
             async setupGPS() {
@@ -846,9 +941,12 @@
                             this.userLat = position.coords.latitude;
                             this.userLng = position.coords.longitude;
                             
-                            document.getElementById('lat').textContent = this.userLat.toFixed(4);
-                            document.getElementById('lng').textContent = this.userLng.toFixed(4);
+                            const latEl = document.getElementById('lat');
+                            const lngEl = document.getElementById('lng');
+                            if (latEl) latEl.textContent = this.userLat.toFixed(4);
+                            if (lngEl) lngEl.textContent = this.userLng.toFixed(4);
                             
+                            // Watch position
                             navigator.geolocation.watchPosition(
                                 (pos) => this.updatePosition(pos),
                                 (error) => console.warn("GPS update error:", error),
@@ -866,132 +964,173 @@
             }
 
             setupThreeJS() {
-                const canvas = document.getElementById('canvas');
-                
-                this.scene = new THREE.Scene();
-                
-                this.camera = new THREE.PerspectiveCamera(
-                    75, 
-                    window.innerWidth / window.innerHeight, 
-                    0.1, 
-                    1000
-                );
-                
-                this.renderer = new THREE.WebGLRenderer({ 
-                    canvas: canvas, 
-                    alpha: true 
-                });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setClearColor(0x000000, 0);
+                try {
+                    const canvas = document.getElementById('canvas');
+                    if (!canvas) throw new Error('Canvas element not found');
+                    
+                    this.scene = new THREE.Scene();
+                    
+                    this.camera = new THREE.PerspectiveCamera(
+                        75, 
+                        window.innerWidth / window.innerHeight, 
+                        0.1, 
+                        1000
+                    );
+                    
+                    this.renderer = new THREE.WebGLRenderer({ 
+                        canvas: canvas, 
+                        alpha: true 
+                    });
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    this.renderer.setClearColor(0x000000, 0);
 
-                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-                this.scene.add(ambientLight);
-                
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(0, 1, 0);
-                this.scene.add(directionalLight);
+                    // Lighting
+                    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                    this.scene.add(ambientLight);
+                    
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                    directionalLight.position.set(0, 1, 0);
+                    this.scene.add(directionalLight);
 
-                window.addEventListener('resize', () => this.onWindowResize());
+                    window.addEventListener('resize', () => this.onWindowResize());
+                } catch (error) {
+                    console.error('Three.js setup error:', error);
+                    throw error;
+                }
             }
 
             setupDeviceOrientation() {
-                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    DeviceOrientationEvent.requestPermission()
-                        .then(response => {
-                            if (response == 'granted') {
-                                window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
-                            }
-                        });
-                } else {
-                    window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
+                try {
+                    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        DeviceOrientationEvent.requestPermission()
+                            .then(response => {
+                                if (response == 'granted') {
+                                    window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
+                                }
+                            })
+                            .catch(error => console.warn('Device orientation permission error:', error));
+                    } else {
+                        window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
+                    }
+                } catch (error) {
+                    console.error('Device orientation setup error:', error);
                 }
             }
 
             generateNearbyPOIs() {
-                const radius = 0.002; // Slightly larger radius for more spread
-                
-                this.samplePOIs.forEach((poiTemplate, index) => {
-                    const angle = (index / this.samplePOIs.length) * Math.PI * 2;
-                    const distance = radius * (0.3 + Math.random() * 0.7);
+                try {
+                    const radius = 0.002;
                     
-                    const poi = {
-                        ...poiTemplate,
-                        lat: this.userLat + Math.cos(angle) * distance,
-                        lng: this.userLng + Math.sin(angle) * distance,
-                        id: index
-                    };
-                    
-                    this.pois.push(poi);
-                    this.createPOIObject(poi);
-                });
+                    this.samplePOIs.forEach((poiTemplate, index) => {
+                        const angle = (index / this.samplePOIs.length) * Math.PI * 2;
+                        const distance = radius * (0.3 + Math.random() * 0.7);
+                        
+                        const poi = {
+                            ...poiTemplate,
+                            lat: this.userLat + Math.cos(angle) * distance,
+                            lng: this.userLng + Math.sin(angle) * distance,
+                            id: index
+                        };
+                        
+                        this.pois.push(poi);
+                        this.createPOIObject(poi);
+                    });
 
-                document.getElementById('poiCount').textContent = this.pois.length;
-                this.addMapMarkers();
+                    const poiCountEl = document.getElementById('poiCount');
+                    if (poiCountEl) poiCountEl.textContent = this.pois.length;
+                    
+                    this.addMapMarkers();
+                } catch (error) {
+                    console.error('POI generation error:', error);
+                }
             }
 
             createPOIObject(poi) {
-                const group = new THREE.Group();
-                
-                const geometry = new THREE.CylinderGeometry(2, 2, 8, 8);
-                const material = new THREE.MeshLambertMaterial({ color: poi.color });
-                const marker = new THREE.Mesh(geometry, material);
-                marker.position.y = 4;
-                group.add(marker);
-                
-                marker.userData.originalY = marker.position.y;
-                marker.userData.animationOffset = Math.random() * Math.PI * 2;
-                
-                const baseGeometry = new THREE.CylinderGeometry(3, 3, 1, 8);
-                const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
-                const base = new THREE.Mesh(baseGeometry, baseMaterial);
-                group.add(base);
-                
-                this.updatePOIPosition(group, poi);
-                
-                group.userData.poi = poi;
-                this.poiObjects.push(group);
-                this.scene.add(group);
+                try {
+                    if (!this.scene) return;
+
+                    const group = new THREE.Group();
+                    
+                    const geometry = new THREE.CylinderGeometry(2, 2, 8, 8);
+                    const material = new THREE.MeshLambertMaterial({ color: poi.color });
+                    const marker = new THREE.Mesh(geometry, material);
+                    marker.position.y = 4;
+                    group.add(marker);
+                    
+                    marker.userData.originalY = marker.position.y;
+                    marker.userData.animationOffset = Math.random() * Math.PI * 2;
+                    
+                    const baseGeometry = new THREE.CylinderGeometry(3, 3, 1, 8);
+                    const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
+                    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+                    group.add(base);
+                    
+                    this.updatePOIPosition(group, poi);
+                    
+                    group.userData.poi = poi;
+                    this.poiObjects.push(group);
+                    this.scene.add(group);
+                } catch (error) {
+                    console.error('POI object creation error:', error);
+                }
             }
 
             updatePOIPosition(object, poi) {
-                const distance = this.calculateDistance(this.userLat, this.userLng, poi.lat, poi.lng);
-                const bearing = this.calculateBearing(this.userLat, this.userLng, poi.lat, poi.lng);
-                
-                const scaledDistance = Math.min(distance * 8, 120);
-                
-                const x = Math.sin(bearing) * scaledDistance;
-                const z = -Math.cos(bearing) * scaledDistance;
-                
-                object.position.set(x, 0, z);
-                poi.distance = distance;
+                try {
+                    const distance = this.calculateDistance(this.userLat, this.userLng, poi.lat, poi.lng);
+                    const bearing = this.calculateBearing(this.userLat, this.userLng, poi.lat, poi.lng);
+                    
+                    const scaledDistance = Math.min(distance * 8, 120);
+                    
+                    const x = Math.sin(bearing) * scaledDistance;
+                    const z = -Math.cos(bearing) * scaledDistance;
+                    
+                    object.position.set(x, 0, z);
+                    poi.distance = distance;
+                } catch (error) {
+                    console.error('POI position update error:', error);
+                }
             }
 
             updateOrientation(event) {
-                if (event.alpha !== null) {
-                    this.heading = event.alpha;
-                    document.getElementById('heading').textContent = Math.round(this.heading);
-                    
-                    const alpha = event.alpha * Math.PI / 180;
-                    const beta = event.beta * Math.PI / 180;
-                    const gamma = event.gamma * Math.PI / 180;
-                    
-                    this.camera.rotation.set(beta - Math.PI/2, alpha, -gamma);
+                try {
+                    if (event.alpha !== null && this.camera) {
+                        this.heading = event.alpha;
+                        const headingEl = document.getElementById('heading');
+                        if (headingEl) headingEl.textContent = Math.round(this.heading);
+                        
+                        const alpha = event.alpha * Math.PI / 180;
+                        const beta = event.beta * Math.PI / 180;
+                        const gamma = event.gamma * Math.PI / 180;
+                        
+                        this.camera.rotation.set(beta - Math.PI/2, alpha, -gamma);
+                    }
+                } catch (error) {
+                    console.error('Orientation update error:', error);
                 }
             }
 
             updatePosition(position) {
-                this.userLat = position.coords.latitude;
-                this.userLng = position.coords.longitude;
-                
-                document.getElementById('lat').textContent = this.userLat.toFixed(4);
-                document.getElementById('lng').textContent = this.userLng.toFixed(4);
-                
-                this.pois.forEach((poi, index) => {
-                    this.updatePOIPosition(this.poiObjects[index], poi);
-                });
-                
-                this.updateMapLocation();
-                this.addMapMarkers();
+                try {
+                    this.userLat = position.coords.latitude;
+                    this.userLng = position.coords.longitude;
+                    
+                    const latEl = document.getElementById('lat');
+                    const lngEl = document.getElementById('lng');
+                    if (latEl) latEl.textContent = this.userLat.toFixed(4);
+                    if (lngEl) lngEl.textContent = this.userLng.toFixed(4);
+                    
+                    this.pois.forEach((poi, index) => {
+                        if (this.poiObjects[index]) {
+                            this.updatePOIPosition(this.poiObjects[index], poi);
+                        }
+                    });
+                    
+                    this.updateMapLocation();
+                    this.addMapMarkers();
+                } catch (error) {
+                    console.error('Position update error:', error);
+                }
             }
 
             calculateDistance(lat1, lng1, lat2, lng2) {
@@ -1016,75 +1155,119 @@
             }
 
             animate() {
-                if (!this.isARMode) {
+                try {
                     requestAnimationFrame(() => this.animate());
-                    return;
-                }
-                
-                requestAnimationFrame(() => this.animate());
-                
-                const time = Date.now() * 0.001;
-                this.poiObjects.forEach(obj => {
-                    const marker = obj.children[0];
-                    if (marker.userData.originalY !== undefined) {
-                        marker.position.y = marker.userData.originalY + 
-                                          Math.sin(time + marker.userData.animationOffset) * 1.5;
+                    
+                    if (!this.isARMode || !this.renderer || !this.scene || !this.camera) {
+                        return;
                     }
-                    obj.lookAt(this.camera.position);
-                });
-                
-                this.renderer.render(this.scene, this.camera);
-                this.checkNearbyPOIs();
+                    
+                    const time = Date.now() * 0.001;
+                    this.poiObjects.forEach(obj => {
+                        if (obj && obj.children && obj.children[0]) {
+                            const marker = obj.children[0];
+                            if (marker.userData.originalY !== undefined) {
+                                marker.position.y = marker.userData.originalY + 
+                                                  Math.sin(time + marker.userData.animationOffset) * 1.5;
+                            }
+                            obj.lookAt(this.camera.position);
+                        }
+                    });
+                    
+                    this.renderer.render(this.scene, this.camera);
+                    this.checkNearbyPOIs();
+                } catch (error) {
+                    console.error('Animation error:', error);
+                }
             }
 
             checkNearbyPOIs() {
                 if (!this.isARMode) return;
                 
-                const nearbyPOI = this.pois.find(poi => poi.distance < 75);
-                
-                if (nearbyPOI && nearbyPOI !== this.currentPOI) {
-                    this.showPOIInfo(nearbyPOI);
-                    this.currentPOI = nearbyPOI;
-                } else if (!nearbyPOI && this.currentPOI) {
-                    this.hidePOIInfo();
-                    this.currentPOI = null;
+                try {
+                    const nearbyPOI = this.pois.find(poi => poi.distance < 75);
+                    
+                    if (nearbyPOI && nearbyPOI !== this.currentPOI) {
+                        this.showPOIInfo(nearbyPOI);
+                        this.currentPOI = nearbyPOI;
+                    } else if (!nearbyPOI && this.currentPOI) {
+                        this.hidePOIInfo();
+                        this.currentPOI = null;
+                    }
+                } catch (error) {
+                    console.error('POI check error:', error);
                 }
             }
 
             showPOIInfo(poi) {
-                const infoDiv = document.getElementById('poiInfo');
-                document.getElementById('poiIcon').textContent = poi.icon;
-                document.getElementById('poiName').textContent = poi.name;
-                document.getElementById('poiDescription').textContent = poi.description;
-                document.getElementById('poiDistance').textContent = Math.round(poi.distance);
-                infoDiv.classList.add('show');
+                try {
+                    const infoDiv = document.getElementById('poiInfo');
+                    const iconEl = document.getElementById('poiIcon');
+                    const nameEl = document.getElementById('poiName');
+                    const descEl = document.getElementById('poiDescription');
+                    const distanceEl = document.getElementById('poiDistance');
+                    
+                    if (iconEl) iconEl.textContent = poi.icon;
+                    if (nameEl) nameEl.textContent = poi.name;
+                    if (descEl) descEl.textContent = poi.description;
+                    if (distanceEl) distanceEl.textContent = Math.round(poi.distance);
+                    if (infoDiv) infoDiv.classList.add('show');
+                } catch (error) {
+                    console.error('Show POI info error:', error);
+                }
             }
 
             hidePOIInfo() {
-                document.getElementById('poiInfo').classList.remove('show');
+                try {
+                    const infoDiv = document.getElementById('poiInfo');
+                    if (infoDiv) infoDiv.classList.remove('show');
+                } catch (error) {
+                    console.error('Hide POI info error:', error);
+                }
             }
 
             updateStatus(message, isError = false) {
-                const status = document.getElementById('status');
-                status.textContent = message;
-                status.className = isError ? 'status-value error' : 'status-value';
+                try {
+                    const status = document.getElementById('status');
+                    if (status) {
+                        status.textContent = message;
+                        status.className = isError ? 'status-value error' : 'status-value';
+                    }
+                } catch (error) {
+                    console.error('Status update error:', error);
+                }
             }
 
             onWindowResize() {
-                if (this.camera && this.renderer) {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                try {
+                    if (this.camera && this.renderer) {
+                        this.camera.aspect = window.innerWidth / window.innerHeight;
+                        this.camera.updateProjectionMatrix();
+                        this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    }
+                } catch (error) {
+                    console.error('Resize error:', error);
                 }
             }
         }
 
+        // Global functions
         function initMap() {
             console.log("Google Maps API loaded");
         }
 
+        // Initialize when page loads
         window.addEventListener('load', () => {
-            new ARDashboard();
+            try {
+                new ARDashboard();
+            } catch (error) {
+                console.error('Failed to initialize AR Dashboard:', error);
+            }
+        });
+
+        // Handle errors globally
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
         });
     </script>
 </body>
