@@ -387,16 +387,6 @@
             text-align: center;
         }
 
-        /* Logout button positioning - Moved up closer to menu items */
-        .menu-footer {
-            padding: 16px 16px 20px 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            flex-shrink: 0;
-            margin-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
-        }
-
         .logout-button {
             width: 100%;
             background: linear-gradient(135deg, rgba(244, 67, 54, 0.8), rgba(244, 67, 54, 0.6));
@@ -1199,10 +1189,7 @@
                 top: calc(env(safe-area-inset-top, 8px) + 180px);
             }
 
-            /* Remove duplicate logout button adjustments since we're using normal flow */
-            .menu-footer {
-                margin-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
-            }
+            /* Remove all the old logout button positioning rules since it's now inline */
         }
 
         @media (max-height: 640px) {
@@ -1233,10 +1220,7 @@
                 top: calc(env(safe-area-inset-top, 8px) + 170px);
             }
 
-            /* Adjust logout button for shorter screens */
-            .menu-footer {
-                margin-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
-            }
+            /* Remove old logout positioning */
         }
 
         /* Safe area optimizations */
@@ -1253,24 +1237,10 @@
                 padding-top: calc(max(env(safe-area-inset-top), 8px) + 16px);
             }
             
-            /* Properly position the logout button with safe areas */
-            .menu-footer {
-                margin-bottom: calc(max(env(safe-area-inset-bottom), 20px) + 20px);
-            }
+            /* Remove old logout positioning rules */
         }
 
-        /* Additional safe area support for various iPhone models */
-        @media screen and (max-height: 896px) and (orientation: portrait) {
-            .menu-footer {
-                margin-bottom: calc(env(safe-area-inset-bottom, 34px) + 20px);
-            }
-        }
-
-        @media screen and (max-height: 667px) and (orientation: portrait) {
-            .menu-footer {
-                margin-bottom: calc(env(safe-area-inset-bottom, 20px) + 30px);
-            }
-        }
+        /* Remove old logout positioning rules for iPhone models */
 
         /* Accessibility */
         @media (prefers-reduced-motion: reduce) {
@@ -1395,12 +1365,13 @@
                     <div class="menu-item-icon">❓</div>
                     <div class="menu-item-text">Help & Support</div>
                 </div>
-            </div>
-            
-            <div class="menu-footer">
-                <button class="logout-button" id="sideMenuLogout">
-                    🚪 Sign Out
-                </button>
+                
+                <!-- Logout Button moved up here -->
+                <div style="padding: 16px;">
+                    <button class="logout-button" id="sideMenuLogout">
+                        🚪 Sign Out
+                    </button>
+                </div>
             </div>
         </div>
         
