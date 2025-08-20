@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPS AR Demo</title>
+    <title>GPS AR Demo with Map</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body {
@@ -28,6 +28,7 @@
             height: 100%;
             object-fit: cover;
             z-index: 1;
+            display: none;
         }
 
         #canvas {
@@ -38,6 +39,16 @@
             height: 100%;
             z-index: 2;
             pointer-events: none;
+            display: none;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
 
         #ui {
@@ -45,9 +56,9 @@
             top: 20px;
             left: 20px;
             right: 20px;
-            z-index: 3;
+            z-index: 10;
             color: white;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             padding: 15px;
             border-radius: 10px;
             font-size: 14px;
@@ -64,15 +75,50 @@
 
         .poi-info {
             position: absolute;
-            bottom: 20px;
+            bottom: 80px;
             left: 20px;
             right: 20px;
-            z-index: 3;
+            z-index: 10;
             color: white;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.9);
             padding: 15px;
             border-radius: 10px;
             display: none;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            flex: 1;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .control-btn:hover {
+            background: #45a049;
+        }
+
+        .control-btn.active {
+            background: #2196F3;
+        }
+
+        .control-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
         }
 
         .start-button {
@@ -80,7 +126,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 4;
+            z-index: 11;
             background: #4CAF50;
             color: white;
             border: none;
@@ -93,17 +139,87 @@
         .start-button:hover {
             background: #45a049;
         }
+
+        .logo-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            display: none;
+            text-align: center;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #4CAF50;
+        }
+
+        .client-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .logo-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .mode-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .ar-mode {
+            background: rgba(76, 175, 80, 0.9) !important;
+        }
+
+        .map-mode {
+            background: rgba(33, 150, 243, 0.9) !important;
+        }
     </style>
 </head>
 <body>
     <div id="container">
-        <button id="startBtn" class="start-button">Start AR Experience</button>
+        <button id="startBtn" class="start-button">Start GPS Experience</button>
         
+        <div id="map"></div>
         <video id="video" autoplay muted playsinline></video>
         <canvas id="canvas"></canvas>
         
+        <div class="mode-indicator" id="modeIndicator">MAP MODE</div>
+        
+        <div class="logo-container" id="logoContainer">
+            <div class="client-logo" id="clientLogo">LOGO</div>
+            <div class="logo-text">Your Brand Here</div>
+            <div class="logo-subtext">AR Experience Powered</div>
+        </div>
+        
         <div id="ui">
-            <div id="status">Loading GPS AR...</div>
+            <div id="status">Loading GPS...</div>
             <div>Lat: <span id="lat">--</span></div>
             <div>Lng: <span id="lng">--</span></div>
             <div>Heading: <span id="heading">--</span>°</div>
@@ -115,7 +231,16 @@
             <p id="poiDescription"></p>
             <p>Distance: <span id="poiDistance"></span>m</p>
         </div>
+
+        <div class="controls">
+            <button id="mapBtn" class="control-btn active">Map View</button>
+            <button id="arBtn" class="control-btn" disabled>AR View</button>
+        </div>
     </div>
+
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+    </script>
 
     <script>
         class GPSARApp {
@@ -128,15 +253,19 @@
                 this.renderer = null;
                 this.pois = [];
                 this.poiObjects = [];
+                this.mapMarkers = [];
                 this.isStarted = false;
+                this.isARMode = false;
+                this.map = null;
+                this.userMarker = null;
 
-                // Example POIs around different locations (will be relative to user's position)
+                // Example POIs around different locations
                 this.samplePOIs = [
-                    { name: "Coffee Shop", description: "Great coffee nearby!", type: "food", color: 0x8B4513 },
-                    { name: "Park", description: "Beautiful green space", type: "nature", color: 0x228B22 },
-                    { name: "Museum", description: "Local history museum", type: "culture", color: 0x4169E1 },
-                    { name: "Restaurant", description: "Popular local restaurant", type: "food", color: 0xFF6347 },
-                    { name: "Store", description: "Shopping center", type: "shopping", color: 0xFF1493 },
+                    { name: "Coffee Shop", description: "Great coffee nearby!", type: "food", color: 0x8B4513, icon: "☕" },
+                    { name: "Park", description: "Beautiful green space", type: "nature", color: 0x228B22, icon: "🌳" },
+                    { name: "Museum", description: "Local history museum", type: "culture", color: 0x4169E1, icon: "🏛️" },
+                    { name: "Restaurant", description: "Popular local restaurant", type: "food", color: 0xFF6347, icon: "🍽️" },
+                    { name: "Store", description: "Shopping center", type: "shopping", color: 0xFF1493, icon: "🏪" },
                 ];
 
                 this.init();
@@ -144,6 +273,8 @@
 
             init() {
                 document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('mapBtn').addEventListener('click', () => this.switchToMap());
+                document.getElementById('arBtn').addEventListener('click', () => this.switchToAR());
             }
 
             async start() {
@@ -153,17 +284,147 @@
                 document.getElementById('startBtn').style.display = 'none';
                 
                 try {
-                    await this.setupCamera();
                     await this.setupGPS();
+                    this.initializeMap();
+                    await this.setupCamera();
                     this.setupThreeJS();
                     this.setupDeviceOrientation();
                     this.generateNearbyPOIs();
-                    this.animate();
                     
-                    this.updateStatus("AR Ready! Point your camera around to see POIs");
+                    // Enable AR button
+                    document.getElementById('arBtn').disabled = false;
+                    
+                    this.updateStatus("Ready! Switch between Map and AR views");
                 } catch (error) {
                     this.updateStatus(`Error: ${error.message}`, true);
                 }
+            }
+
+            initializeMap() {
+                // Initialize with a default location, will update when GPS is available
+                const defaultLocation = { lat: 40.7589, lng: -73.9851 }; // NYC default
+                const mapLocation = this.userLat ? { lat: this.userLat, lng: this.userLng } : defaultLocation;
+
+                this.map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 16,
+                    center: mapLocation,
+                    mapTypeId: 'roadmap',
+                    styles: [
+                        {
+                            featureType: 'poi',
+                            stylers: [{ visibility: 'off' }]
+                        }
+                    ]
+                });
+
+                // Add user location marker
+                this.userMarker = new google.maps.Marker({
+                    position: mapLocation,
+                    map: this.map,
+                    title: 'Your Location',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 8,
+                        fillColor: '#4CAF50',
+                        fillOpacity: 1,
+                        strokeColor: '#fff',
+                        strokeWeight: 2
+                    }
+                });
+
+                // Update map when GPS location is available
+                if (this.userLat) {
+                    this.updateMapLocation();
+                }
+            }
+
+            updateMapLocation() {
+                if (!this.map || !this.userLat) return;
+
+                const userLocation = { lat: this.userLat, lng: this.userLng };
+                this.map.setCenter(userLocation);
+                this.userMarker.setPosition(userLocation);
+            }
+
+            addMapMarkers() {
+                // Clear existing markers
+                this.mapMarkers.forEach(marker => marker.setMap(null));
+                this.mapMarkers = [];
+
+                // Add POI markers to map
+                this.pois.forEach(poi => {
+                    const marker = new google.maps.Marker({
+                        position: { lat: poi.lat, lng: poi.lng },
+                        map: this.map,
+                        title: poi.name,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 12,
+                            fillColor: `#${poi.color.toString(16).padStart(6, '0')}`,
+                            fillOpacity: 0.8,
+                            strokeColor: '#fff',
+                            strokeWeight: 2
+                        }
+                    });
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <div style="padding: 10px;">
+                                <h3 style="margin: 0 0 5px 0; color: #333;">${poi.icon} ${poi.name}</h3>
+                                <p style="margin: 0; color: #666;">${poi.description}</p>
+                                <p style="margin: 5px 0 0 0; font-size: 12px; color: #999;">
+                                    Distance: ${Math.round(poi.distance || 0)}m
+                                </p>
+                            </div>
+                        `
+                    });
+
+                    marker.addListener('click', () => {
+                        infoWindow.open(this.map, marker);
+                    });
+
+                    this.mapMarkers.push(marker);
+                });
+            }
+
+            switchToMap() {
+                this.isARMode = false;
+                document.getElementById('map').style.display = 'block';
+                document.getElementById('video').style.display = 'none';
+                document.getElementById('canvas').style.display = 'none';
+                document.getElementById('logoContainer').style.display = 'none';
+                
+                document.getElementById('mapBtn').classList.add('active');
+                document.getElementById('arBtn').classList.remove('active');
+                
+                document.getElementById('modeIndicator').textContent = 'MAP MODE';
+                document.getElementById('modeIndicator').className = 'mode-indicator map-mode';
+                
+                this.updateMapLocation();
+            }
+
+            switchToAR() {
+                this.isARMode = true;
+                document.getElementById('map').style.display = 'none';
+                document.getElementById('video').style.display = 'block';
+                document.getElementById('canvas').style.display = 'block';
+                document.getElementById('logoContainer').style.display = 'block';
+                
+                document.getElementById('mapBtn').classList.remove('active');
+                document.getElementById('arBtn').classList.add('active');
+                
+                document.getElementById('modeIndicator').textContent = 'AR MODE';
+                document.getElementById('modeIndicator').className = 'mode-indicator ar-mode';
+                
+                if (!this.animationStarted) {
+                    this.animate();
+                    this.animationStarted = true;
+                }
+                
+                // Hide logo after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('logoContainer').style.display = 'none';
+                }, 3000);
             }
 
             async setupCamera() {
@@ -171,7 +432,7 @@
                 
                 const constraints = {
                     video: {
-                        facingMode: 'environment', // Use back camera
+                        facingMode: 'environment',
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }
@@ -206,7 +467,6 @@
                             document.getElementById('lat').textContent = this.userLat.toFixed(6);
                             document.getElementById('lng').textContent = this.userLng.toFixed(6);
                             
-                            // Continue watching position
                             navigator.geolocation.watchPosition(
                                 (pos) => this.updatePosition(pos),
                                 (error) => console.warn("GPS update error:", error),
@@ -242,7 +502,6 @@
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setClearColor(0x000000, 0);
 
-                // Add some lighting
                 const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
                 this.scene.add(ambientLight);
                 
@@ -255,7 +514,6 @@
 
             setupDeviceOrientation() {
                 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    // iOS 13+ permission request
                     DeviceOrientationEvent.requestPermission()
                         .then(response => {
                             if (response == 'granted') {
@@ -263,18 +521,16 @@
                             }
                         });
                 } else {
-                    // Android and older iOS
                     window.addEventListener('deviceorientation', (e) => this.updateOrientation(e));
                 }
             }
 
             generateNearbyPOIs() {
-                // Generate POIs in a circle around user's location
-                const radius = 0.001; // Roughly 100m radius
+                const radius = 0.001;
                 
                 this.samplePOIs.forEach((poiTemplate, index) => {
                     const angle = (index / this.samplePOIs.length) * Math.PI * 2;
-                    const distance = radius * (0.5 + Math.random() * 0.5); // Random distance within radius
+                    const distance = radius * (0.5 + Math.random() * 0.5);
                     
                     const poi = {
                         ...poiTemplate,
@@ -288,30 +544,26 @@
                 });
 
                 document.getElementById('poiCount').textContent = this.pois.length;
+                this.addMapMarkers();
             }
 
             createPOIObject(poi) {
-                // Create a floating marker for the POI
                 const group = new THREE.Group();
                 
-                // Main marker (cylinder)
                 const geometry = new THREE.CylinderGeometry(2, 2, 8, 8);
                 const material = new THREE.MeshLambertMaterial({ color: poi.color });
                 const marker = new THREE.Mesh(geometry, material);
                 marker.position.y = 4;
                 group.add(marker);
                 
-                // Floating animation offset
                 marker.userData.originalY = marker.position.y;
                 marker.userData.animationOffset = Math.random() * Math.PI * 2;
                 
-                // Base platform
                 const baseGeometry = new THREE.CylinderGeometry(3, 3, 1, 8);
                 const baseMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 });
                 const base = new THREE.Mesh(baseGeometry, baseMaterial);
                 group.add(base);
                 
-                // Position based on GPS coordinates
                 this.updatePOIPosition(group, poi);
                 
                 group.userData.poi = poi;
@@ -320,19 +572,15 @@
             }
 
             updatePOIPosition(object, poi) {
-                // Convert GPS coordinates to 3D position relative to user
                 const distance = this.calculateDistance(this.userLat, this.userLng, poi.lat, poi.lng);
                 const bearing = this.calculateBearing(this.userLat, this.userLng, poi.lat, poi.lng);
                 
-                // Scale distance for visibility (1 unit = ~10 meters)
                 const scaledDistance = Math.min(distance * 10, 100);
                 
                 const x = Math.sin(bearing) * scaledDistance;
                 const z = -Math.cos(bearing) * scaledDistance;
                 
                 object.position.set(x, 0, z);
-                
-                // Store distance for UI
                 poi.distance = distance;
             }
 
@@ -341,10 +589,9 @@
                     this.heading = event.alpha;
                     document.getElementById('heading').textContent = Math.round(this.heading);
                     
-                    // Update camera rotation based on device orientation
-                    const alpha = event.alpha * Math.PI / 180; // Z axis
-                    const beta = event.beta * Math.PI / 180;   // X axis
-                    const gamma = event.gamma * Math.PI / 180; // Y axis
+                    const alpha = event.alpha * Math.PI / 180;
+                    const beta = event.beta * Math.PI / 180;
+                    const gamma = event.gamma * Math.PI / 180;
                     
                     this.camera.rotation.set(beta - Math.PI/2, alpha, -gamma);
                 }
@@ -357,14 +604,16 @@
                 document.getElementById('lat').textContent = this.userLat.toFixed(6);
                 document.getElementById('lng').textContent = this.userLng.toFixed(6);
                 
-                // Update POI positions
                 this.pois.forEach((poi, index) => {
                     this.updatePOIPosition(this.poiObjects[index], poi);
                 });
+                
+                this.updateMapLocation();
+                this.addMapMarkers();
             }
 
             calculateDistance(lat1, lng1, lat2, lng2) {
-                const R = 6371000; // Earth's radius in meters
+                const R = 6371000;
                 const dLat = (lat2 - lat1) * Math.PI / 180;
                 const dLng = (lng2 - lng1) * Math.PI / 180;
                 const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -385,9 +634,13 @@
             }
 
             animate() {
+                if (!this.isARMode) {
+                    requestAnimationFrame(() => this.animate());
+                    return;
+                }
+                
                 requestAnimationFrame(() => this.animate());
                 
-                // Animate floating POI markers
                 const time = Date.now() * 0.001;
                 this.poiObjects.forEach(obj => {
                     const marker = obj.children[0];
@@ -395,19 +648,17 @@
                         marker.position.y = marker.userData.originalY + 
                                           Math.sin(time + marker.userData.animationOffset) * 1;
                     }
-                    
-                    // Make markers face the camera
                     obj.lookAt(this.camera.position);
                 });
                 
                 this.renderer.render(this.scene, this.camera);
-                
-                // Check for nearby POIs
                 this.checkNearbyPOIs();
             }
 
             checkNearbyPOIs() {
-                const nearbyPOI = this.pois.find(poi => poi.distance < 50); // Within 50 meters
+                if (!this.isARMode) return;
+                
+                const nearbyPOI = this.pois.find(poi => poi.distance < 50);
                 
                 if (nearbyPOI) {
                     this.showPOIInfo(nearbyPOI);
@@ -418,7 +669,7 @@
 
             showPOIInfo(poi) {
                 const infoDiv = document.getElementById('poiInfo');
-                document.getElementById('poiName').textContent = poi.name;
+                document.getElementById('poiName').textContent = `${poi.icon} ${poi.name}`;
                 document.getElementById('poiDescription').textContent = poi.description;
                 document.getElementById('poiDistance').textContent = Math.round(poi.distance);
                 infoDiv.style.display = 'block';
@@ -431,10 +682,18 @@
             }
 
             onWindowResize() {
-                this.camera.aspect = window.innerWidth / window.innerHeight;
-                this.camera.updateProjectionMatrix();
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                if (this.camera && this.renderer) {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                }
             }
+        }
+
+        // Initialize Google Maps (fallback if API key not provided)
+        function initMap() {
+            // This will be called when Google Maps API loads
+            console.log("Google Maps API loaded");
         }
 
         // Start the app when page loads
